@@ -1,0 +1,70 @@
+id: cb-022
+title: "Create Linear issues from Slack channel messages about bugs"
+difficulty: medium
+category: composite
+description: |
+  Search the #incidents Slack channel for messages from the last 24 hours that
+  mention "bug" or "error". For each unique bug report found, create a
+  corresponding Linear issue in the "Platform" team with priority "high"
+  and status "triage".
+tools_provided:
+  - slack
+  - linear
+initial_state:
+  slack:
+    channels:
+      - id: C005
+        name: incidents
+        messages:
+          - user: ops-bot
+            text: "Bug detected: Payment processing fails for amounts > $10,000"
+            ts: "2026-03-12T08:30:00Z"
+          - user: alice
+            text: "Error in user registration — email validation regex rejects valid TLDs"
+            ts: "2026-03-12T09:15:00Z"
+          - user: bob
+            text: "Deployed hotfix for the caching issue from yesterday"
+            ts: "2026-03-12T10:00:00Z"
+          - user: carol
+            text: "Bug report from customer: PDF export generates blank pages"
+            ts: "2026-03-12T11:00:00Z"
+          - user: dave
+            text: "Standup reminder: 2pm today"
+            ts: "2026-03-12T11:30:00Z"
+  linear:
+    teams:
+      - name: Platform
+        key: ACM
+        members:
+          - sarah@acme.com
+          - mark@acme.com
+    issues:
+      - id: ACM-110
+        title: "Existing issue"
+        status: backlog
+        priority: low
+        team: Platform
+expected_state:
+  slack:
+    command_history:
+      - pattern: "slack message search.*(bug|error)"
+  linear:
+    issues:
+      - title_contains: "Payment processing"
+        priority: high
+        team: Platform
+      - title_contains: "email validation"
+        priority: high
+        team: Platform
+      - title_contains: "PDF export"
+        priority: high
+        team: Platform
+    command_history:
+      - pattern: "linear issue create.*--team.*Platform.*--priority.*high"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 10
+optimal_commands: 4
+timeout_seconds: 90

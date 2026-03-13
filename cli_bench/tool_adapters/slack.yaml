@@ -1,0 +1,87 @@
+name: slack-cli
+description: Slack CLI for managing channels, messages, direct messages, and users
+binary: slack
+auth:
+  type: env_var
+  key: SLACK_TOKEN
+commands:
+  - name: channel list
+    description: List all channels in the workspace with IDs and topics
+    args: []
+    output_format: json
+    side_effects: false
+    example: "slack channel list"
+
+  - name: channel info
+    description: Get detailed information about a specific channel
+    args:
+      - name: channel
+        type: string
+        required: true
+        description: Channel name
+    output_format: json
+    side_effects: false
+    example: "slack channel info --channel engineering"
+
+  - name: channel message
+    description: List messages in a channel with optional limit
+    args:
+      - name: channel
+        type: string
+        required: true
+        description: Channel name
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of messages to return
+    output_format: json
+    side_effects: false
+    example: "slack channel message --channel general --limit 10"
+
+  - name: message send
+    description: Post a message to a channel
+    args:
+      - name: channel
+        type: string
+        required: true
+        description: Channel name
+      - name: text
+        type: string
+        required: true
+        description: Message text content
+    output_format: json
+    side_effects: true
+    example: "slack message send --channel general --text 'Hello team!'"
+
+  - name: dm send
+    description: Send a direct message to a user
+    args:
+      - name: user
+        type: string
+        required: true
+        description: Username of the recipient
+      - name: text
+        type: string
+        required: true
+        description: Message text content
+    output_format: json
+    side_effects: true
+    example: "slack dm send --user alice --text 'Can you review my PR?'"
+
+  - name: search message
+    description: Search messages across all channels by keyword
+    args:
+      - name: query
+        type: string
+        required: true
+        description: Search query string
+    output_format: json
+    side_effects: false
+    example: "slack search message --query deployment"
+
+  - name: user list
+    description: List all users in the workspace
+    args: []
+    output_format: json
+    side_effects: false
+    example: "slack user list"

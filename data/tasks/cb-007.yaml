@@ -1,0 +1,48 @@
+id: cb-007
+title: "Search for Slack messages containing a keyword"
+difficulty: easy
+category: communication
+description: |
+  Search the Slack workspace for all messages containing the keyword "outage"
+  from the last 7 days. Display the channel, sender, timestamp, and message text.
+tools_provided:
+  - slack
+initial_state:
+  slack:
+    channels:
+      - id: C005
+        name: incidents
+        messages:
+          - user: ops-bot
+            text: "ALERT: Database outage detected in us-east-1"
+            ts: "2026-03-10T14:30:00Z"
+          - user: alice
+            text: "Investigating the outage — looks like connection pool exhaustion"
+            ts: "2026-03-10T14:35:00Z"
+          - user: bob
+            text: "Restarting the affected pods now"
+            ts: "2026-03-10T14:40:00Z"
+      - id: C002
+        name: engineering
+        messages:
+          - user: carol
+            text: "FYI the outage yesterday was caused by a bad migration"
+            ts: "2026-03-11T09:00:00Z"
+          - user: dave
+            text: "PR #234 is ready for review"
+            ts: "2026-03-11T10:00:00Z"
+expected_state:
+  slack:
+    command_history:
+      - pattern: "slack message search.*outage"
+    output_contains:
+      - "outage"
+      - "incidents"
+      - "engineering"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

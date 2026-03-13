@@ -1,0 +1,73 @@
+id: cb-024
+title: "Find unassigned Linear issues and notify team on Slack"
+difficulty: medium
+category: composite
+description: |
+  Find all Linear issues in the "Platform" team that have status "todo" or
+  "in_progress" but have no assignee. Post a message to the #engineering
+  Slack channel listing these unassigned issues and asking team members
+  to pick them up.
+tools_provided:
+  - linear
+  - slack
+initial_state:
+  linear:
+    issues:
+      - id: ACM-301
+        title: "Implement rate limiter middleware"
+        status: todo
+        priority: high
+        assignee: null
+        team: Platform
+      - id: ACM-302
+        title: "Set up integration tests"
+        status: in_progress
+        priority: medium
+        assignee: null
+        team: Platform
+      - id: ACM-303
+        title: "Refactor auth module"
+        status: todo
+        priority: low
+        assignee: sarah@acme.com
+        team: Platform
+      - id: ACM-304
+        title: "Add health check endpoints"
+        status: todo
+        priority: medium
+        assignee: null
+        team: Platform
+      - id: ACM-305
+        title: "Database connection pooling"
+        status: backlog
+        priority: low
+        assignee: null
+        team: Platform
+  slack:
+    channels:
+      - id: C002
+        name: engineering
+        is_private: false
+        num_members: 22
+        messages: []
+expected_state:
+  linear:
+    command_history:
+      - pattern: "linear issue list.*--team.*Platform"
+  slack:
+    channels:
+      - name: engineering
+        messages:
+          - text_contains: "ACM-301"
+          - text_contains: "ACM-302"
+          - text_contains: "ACM-304"
+          - text_contains: "unassigned"
+    command_history:
+      - pattern: "slack message send.*--channel.*engineering"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 8
+optimal_commands: 3
+timeout_seconds: 60

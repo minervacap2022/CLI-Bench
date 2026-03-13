@@ -1,0 +1,96 @@
+id: cb-033
+title: "Cross-platform project sync: GitHub milestones to Linear projects to Notion"
+difficulty: hard
+category: composite
+description: |
+  Synchronize project tracking across three platforms. First, list all open
+  GitHub milestones in "acme-corp/web-platform". For each milestone, find or
+  create the corresponding Linear project (matching by name). Update the
+  Linear project's target date to match the milestone's due date. Finally,
+  create a Notion page under "Project Tracking" that shows a unified view
+  of all projects with their GitHub milestone progress (open/closed issue
+  counts) and Linear project status.
+tools_provided:
+  - gh
+  - linear
+  - notion
+initial_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        milestones:
+          - title: "v3.0 Release"
+            state: open
+            due_date: "2026-04-01"
+            open_issues: 12
+            closed_issues: 28
+            description: "Major version release with new auth system"
+          - title: "Security Hardening"
+            state: open
+            due_date: "2026-03-20"
+            open_issues: 5
+            closed_issues: 15
+            description: "Address all findings from Q4 security audit"
+          - title: "Performance Sprint"
+            state: open
+            due_date: "2026-03-25"
+            open_issues: 8
+            closed_issues: 4
+            description: "P95 latency reduction targets"
+          - title: "v2.9 Release"
+            state: closed
+            due_date: "2026-02-28"
+            open_issues: 0
+            closed_issues: 35
+  linear:
+    projects:
+      - name: "v3.0 Release"
+        status: in_progress
+        lead: sarah@acme.com
+        target_date: "2026-03-28"
+        teams: ["Platform"]
+      - name: "Security Hardening"
+        status: in_progress
+        lead: bob@acme.com
+        target_date: "2026-03-15"
+        teams: ["Platform", "Security"]
+  notion:
+    databases:
+      - id: db-003
+        title: "Project Tracking"
+    pages:
+      - id: pg-030
+        title: "Archived Projects"
+        parent: "Project Tracking"
+expected_state:
+  gh:
+    command_history:
+      - pattern: "gh api.*milestones"
+  linear:
+    projects:
+      - name: "v3.0 Release"
+        target_date: "2026-04-01"
+      - name: "Security Hardening"
+        target_date: "2026-03-20"
+      - name: "Performance Sprint"
+        status: planned
+    command_history:
+      - pattern: "linear project update.*v3.0.*--target-date"
+      - pattern: "linear project (update|create).*Security Hardening"
+      - pattern: "linear project create.*Performance Sprint"
+  notion:
+    pages:
+      - title_contains: "Project Sync"
+        parent: "Project Tracking"
+        content_contains: "v3.0 Release"
+        content_contains_2: "Security Hardening"
+        content_contains_3: "Performance Sprint"
+    command_history:
+      - pattern: "notion page create.*--parent.*Project Tracking"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 15
+optimal_commands: 8
+timeout_seconds: 120

@@ -1,0 +1,162 @@
+name: microsoft-365-cli
+description: Microsoft 365 CLI for Outlook mail, Calendar, OneDrive, and Teams operations
+binary: m365
+auth:
+  type: oauth
+  key: MS365_OAUTH_CREDENTIALS
+commands:
+  - name: mail send
+    description: Send an email via Outlook
+    args:
+      - name: to
+        type: string
+        required: true
+        description: Recipient email address
+      - name: subject
+        type: string
+        required: true
+        description: Email subject line
+      - name: body
+        type: string
+        required: true
+        description: Email body text
+      - name: cc
+        type: string
+        required: false
+        description: CC recipients (comma-separated)
+      - name: importance
+        type: enum
+        required: false
+        description: Email importance level
+        values: ["low", "normal", "high"]
+    output_format: json
+    side_effects: true
+    example: "m365 mail send --to alice@contoso.com --subject 'Update' --body 'Project status' --importance high"
+
+  - name: mail list
+    description: List recent emails in the mailbox
+    args:
+      - name: folder
+        type: enum
+        required: false
+        description: Mail folder to list
+        values: ["inbox", "sent", "drafts", "archive"]
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of emails to return
+      - name: unread
+        type: bool
+        required: false
+        description: Only show unread messages
+    output_format: json
+    side_effects: false
+    example: "m365 mail list --folder inbox --limit 20 --unread"
+
+  - name: calendar event create
+    description: Create a new calendar event in Outlook
+    args:
+      - name: subject
+        type: string
+        required: true
+        description: Event subject/title
+      - name: start
+        type: datetime
+        required: true
+        description: Event start datetime (ISO 8601)
+      - name: end
+        type: datetime
+        required: true
+        description: Event end datetime (ISO 8601)
+      - name: body
+        type: string
+        required: false
+        description: Event description
+      - name: attendees
+        type: string
+        required: false
+        description: Comma-separated email addresses of attendees
+      - name: location
+        type: string
+        required: false
+        description: Event location
+      - name: is-online
+        type: bool
+        required: false
+        description: Whether this is an online meeting
+    output_format: json
+    side_effects: true
+    example: "m365 calendar event create --subject 'Sprint Planning' --start 2026-03-15T14:00:00Z --end 2026-03-15T15:00:00Z --attendees team@contoso.com --is-online"
+
+  - name: calendar event list
+    description: List calendar events with optional date range
+    args:
+      - name: start
+        type: datetime
+        required: false
+        description: Start datetime filter (ISO 8601)
+      - name: end
+        type: datetime
+        required: false
+        description: End datetime filter (ISO 8601)
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of events to return
+    output_format: json
+    side_effects: false
+    example: "m365 calendar event list --start 2026-03-01T00:00:00Z --end 2026-03-31T23:59:59Z"
+
+  - name: onedrive list
+    description: List files and folders in OneDrive
+    args:
+      - name: folder
+        type: string
+        required: false
+        description: Folder path to list (defaults to root)
+      - name: type
+        type: enum
+        required: false
+        description: Filter by item type
+        values: ["file", "folder"]
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of items to return
+    output_format: json
+    side_effects: false
+    example: "m365 onedrive list --folder /Documents --type file"
+
+  - name: onedrive search
+    description: Search for files in OneDrive
+    args:
+      - name: query
+        type: string
+        required: true
+        description: Search query string
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of results
+    output_format: json
+    side_effects: false
+    example: "m365 onedrive search --query 'quarterly report'"
+
+  - name: teams message send
+    description: Send a message to a Teams channel
+    args:
+      - name: team
+        type: string
+        required: true
+        description: Team name or ID
+      - name: channel
+        type: string
+        required: true
+        description: Channel name
+      - name: message
+        type: string
+        required: true
+        description: Message text content
+    output_format: json
+    side_effects: true
+    example: "m365 teams message send --team Engineering --channel general --message 'Deploy complete'"

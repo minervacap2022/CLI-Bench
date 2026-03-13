@@ -1,0 +1,122 @@
+id: cb-032
+title: "Sprint planning: pull Linear backlog, create Notion sprint doc, notify team"
+difficulty: hard
+category: composite
+description: |
+  Prepare for sprint planning. Pull all Linear issues from the "Platform"
+  team that are in "backlog" or "todo" status and have priority "high" or
+  "urgent". Create a Notion page under "Engineering Wiki" titled
+  "Sprint 12 Planning - 2026-03-12" that organizes these issues by priority,
+  includes estimated effort, and highlights any blocked dependencies.
+  Then post a message to the #engineering Slack channel announcing the sprint
+  planning doc is ready and listing the top 3 highest priority items.
+tools_provided:
+  - linear
+  - notion
+  - slack
+initial_state:
+  linear:
+    teams:
+      - name: Platform
+        key: ACM
+    issues:
+      - id: ACM-701
+        title: "Implement GraphQL subscriptions"
+        status: backlog
+        priority: urgent
+        assignee: null
+        team: Platform
+        estimate: 8
+        labels: ["api"]
+      - id: ACM-702
+        title: "Add OpenTelemetry tracing"
+        status: todo
+        priority: high
+        assignee: sarah@acme.com
+        team: Platform
+        estimate: 5
+        labels: ["observability"]
+      - id: ACM-703
+        title: "Migrate to PostgreSQL 16"
+        status: backlog
+        priority: high
+        assignee: null
+        team: Platform
+        estimate: 13
+        labels: ["database", "blocked"]
+        blocked_by: "ACM-710"
+      - id: ACM-704
+        title: "Implement circuit breaker pattern"
+        status: todo
+        priority: urgent
+        assignee: mark@acme.com
+        team: Platform
+        estimate: 5
+        labels: ["resilience"]
+      - id: ACM-705
+        title: "Update API documentation"
+        status: todo
+        priority: low
+        assignee: null
+        team: Platform
+        estimate: 3
+        labels: ["docs"]
+      - id: ACM-706
+        title: "Add retry logic to external calls"
+        status: backlog
+        priority: high
+        assignee: null
+        team: Platform
+        estimate: 3
+        labels: ["resilience"]
+      - id: ACM-710
+        title: "Provision new database cluster"
+        status: in_progress
+        priority: high
+        assignee: ops-alice@acme.com
+        team: Platform
+        estimate: 8
+        labels: ["infrastructure"]
+  notion:
+    databases:
+      - id: db-001
+        title: "Engineering Wiki"
+    pages:
+      - id: pg-020
+        title: "Sprint 11 Retrospective"
+        parent: "Engineering Wiki"
+  slack:
+    channels:
+      - id: C002
+        name: engineering
+        is_private: false
+        num_members: 22
+        messages: []
+expected_state:
+  linear:
+    command_history:
+      - pattern: "linear issue list.*--team.*Platform"
+  notion:
+    pages:
+      - title_contains: "Sprint 12 Planning"
+        parent: "Engineering Wiki"
+        content_contains: "ACM-701"
+        content_contains_2: "ACM-704"
+        content_contains_3: "blocked"
+    command_history:
+      - pattern: "notion page create.*Sprint 12"
+  slack:
+    channels:
+      - name: engineering
+        messages:
+          - text_contains: "Sprint 12"
+          - text_contains: "planning"
+    command_history:
+      - pattern: "slack message send.*--channel.*engineering"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 12
+optimal_commands: 5
+timeout_seconds: 120

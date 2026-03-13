@@ -1,0 +1,139 @@
+name: alertmgr
+description: Alert and incident management system for monitoring, escalation, and on-call coordination
+binary: alertmgr
+auth:
+  type: env_var
+  key: ALERTMGR_API_KEY
+commands:
+  - name: alert list
+    description: List alerts with optional filtering by severity and status
+    args:
+      - name: severity
+        type: enum
+        required: false
+        description: Filter by alert severity
+        values: ["critical", "warning", "info"]
+      - name: status
+        type: enum
+        required: false
+        description: Filter by alert status
+        values: ["active", "acknowledged", "resolved"]
+      - name: service
+        type: string
+        required: false
+        description: Filter by originating service
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of alerts to return
+    output_format: json
+    side_effects: false
+    example: "alertmgr alert list --severity critical --status active"
+
+  - name: alert acknowledge
+    description: Acknowledge an active alert
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Alert ID
+      - name: comment
+        type: string
+        required: true
+        description: Acknowledgment comment
+    output_format: json
+    side_effects: true
+    example: "alertmgr alert acknowledge --id alt-001 --comment 'Investigating now'"
+
+  - name: alert resolve
+    description: Resolve an acknowledged or active alert
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Alert ID
+      - name: resolution
+        type: string
+        required: true
+        description: Resolution description
+    output_format: json
+    side_effects: true
+    example: "alertmgr alert resolve --id alt-001 --resolution 'Scaled up instances, load normalized'"
+
+  - name: rule create
+    description: Create an alerting rule based on metric conditions
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Rule name (unique identifier)
+      - name: condition
+        type: string
+        required: true
+        description: "Alert condition expression (e.g. 'cpu_usage > 90 for 5m')"
+      - name: severity
+        type: enum
+        required: true
+        description: Alert severity when rule triggers
+        values: ["critical", "warning", "info"]
+      - name: notify
+        type: string
+        required: true
+        description: Notification channel (e.g. slack channel, email, pagerduty)
+      - name: description
+        type: string
+        required: false
+        description: Human-readable rule description
+    output_format: json
+    side_effects: true
+    example: "alertmgr rule create --name high-cpu --condition 'cpu_usage > 90 for 5m' --severity critical --notify '#ops-alerts'"
+
+  - name: escalation create
+    description: Create an escalation policy with ordered notification levels
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Escalation policy name
+      - name: levels
+        type: json
+        required: true
+        description: "Ordered escalation levels as JSON array [{\"delay_minutes\": int, \"notify\": str}]"
+    output_format: json
+    side_effects: true
+    example: "alertmgr escalation create --name backend-escalation --levels '[{\"delay_minutes\": 0, \"notify\": \"on-call\"}, {\"delay_minutes\": 15, \"notify\": \"team-lead\"}, {\"delay_minutes\": 30, \"notify\": \"vp-eng\"}]'"
+
+  - name: oncall show
+    description: Show the current on-call schedule and active responder
+    args:
+      - name: team
+        type: string
+        required: false
+        description: Team name (defaults to all teams)
+    output_format: json
+    side_effects: false
+    example: "alertmgr oncall show --team backend"
+
+  - name: incident create
+    description: Create a new incident from one or more related alerts
+    args:
+      - name: title
+        type: string
+        required: true
+        description: Incident title
+      - name: severity
+        type: enum
+        required: true
+        description: Incident severity
+        values: ["critical", "warning", "info"]
+      - name: alerts
+        type: string
+        required: false
+        description: Comma-separated alert IDs to associate with this incident
+      - name: commander
+        type: string
+        required: false
+        description: Incident commander username
+    output_format: json
+    side_effects: true
+    example: "alertmgr incident create --title 'Database outage' --severity critical --alerts alt-001,alt-002 --commander alice"

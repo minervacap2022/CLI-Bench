@@ -1,0 +1,37 @@
+id: cb-002
+title: "Create a GitHub issue with title and body"
+difficulty: easy
+category: project_mgmt
+description: |
+  Create a new issue in the repository "acme-corp/web-platform" with the title
+  "Add rate limiting to public API endpoints" and a body that describes the need
+  to prevent abuse on unauthenticated API routes.
+tools_provided:
+  - gh
+initial_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        issues:
+          - number: 50
+            title: "Existing issue"
+            state: open
+            assignee: alice
+            labels: []
+expected_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        issues:
+          - title: "Add rate limiting to public API endpoints"
+            state: open
+            body_contains: "rate limit"
+    command_history:
+      - pattern: "gh issue create.*--repo acme-corp/web-platform.*--title"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

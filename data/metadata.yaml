@@ -1,0 +1,49 @@
+name: cli-bench
+version: "1.0"
+description: |
+  CLI-Bench evaluates AI agents on their ability to use command-line tools
+  to accomplish real-world tasks across developer platforms and services.
+  Tasks span single-tool operations, multi-tool orchestration, and complex
+  workflows involving fictional CLIs.
+
+task_count: 40
+difficulty_distribution:
+  easy: 20
+  medium: 10
+  hard: 10
+
+categories:
+  - devops
+  - project_mgmt
+  - communication
+  - data_ops
+  - custom_cli
+  - composite
+
+tools:
+  real_world:
+    - gh          # GitHub CLI
+    - slack       # Slack CLI
+    - linear      # Linear CLI
+    - notion      # Notion CLI
+    - google      # Google Workspace (Gmail, Calendar, Drive)
+    - jira        # Jira CLI
+    - microsoft   # Microsoft 365
+  fictional:
+    - kforge      # Artifact/deployment management
+    - flowctl     # Workflow/approval engine
+    - meshctl     # Service mesh control
+    - datapipe    # ETL pipeline builder
+    - alertmgr    # Alert/incident management
+
+scoring:
+  dimensions:
+    outcome: "Did the agent achieve the desired end state?"
+    efficiency: "Did the agent use a reasonable number of commands?"
+    recovery: "Did the agent handle errors or unexpected states gracefully?"
+  default_weights:
+    outcome: 0.6
+    efficiency: 0.2
+    recovery: 0.2
+
+created: "2026-03-12"

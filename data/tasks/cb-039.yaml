@@ -1,0 +1,101 @@
+id: cb-039
+title: "(meshctl + alertmgr) Detect failing service, reroute traffic, create alert"
+difficulty: hard
+category: composite
+description: |
+  A service mesh health check has detected issues. Using meshctl, check the
+  health of all services in the "production" mesh. For any service with error
+  rate above 5%, reroute its traffic to the canary deployment (weight 0%
+  to primary, 100% to canary). Then use alertmgr to create alerts for each
+  failing service and create an incident if more than one service is affected.
+  Add traffic rerouting details to the incident timeline.
+tools_provided:
+  - meshctl
+  - alertmgr
+initial_state:
+  meshctl:
+    mesh: production
+    services:
+      - name: user-service
+        version: "1.4.0"
+        instances: 3
+        error_rate: 0.2
+        latency_p99_ms: 45
+        traffic_weights:
+          primary: 100
+          canary: 0
+      - name: payment-service
+        version: "2.1.0"
+        instances: 3
+        error_rate: 12.5
+        latency_p99_ms: 3200
+        traffic_weights:
+          primary: 100
+          canary: 0
+      - name: notification-service
+        version: "1.0.3"
+        instances: 2
+        error_rate: 8.7
+        latency_p99_ms: 1500
+        traffic_weights:
+          primary: 100
+          canary: 0
+      - name: search-service
+        version: "3.2.1"
+        instances: 4
+        error_rate: 1.2
+        latency_p99_ms: 120
+        traffic_weights:
+          primary: 100
+          canary: 0
+      - name: auth-service
+        version: "2.0.5"
+        instances: 3
+        error_rate: 0.5
+        latency_p99_ms: 30
+        traffic_weights:
+          primary: 100
+          canary: 0
+  alertmgr:
+    alerts: []
+    incidents: []
+    oncall:
+      payments: oncall-pay@acme.com
+      platform: oncall-plat@acme.com
+expected_state:
+  meshctl:
+    services:
+      - name: payment-service
+        traffic_weights:
+          primary: 0
+          canary: 100
+      - name: notification-service
+        traffic_weights:
+          primary: 0
+          canary: 100
+    command_history:
+      - pattern: "meshctl service health.*--mesh.*production"
+      - pattern: "meshctl traffic shift.*payment-service.*--canary.*100"
+      - pattern: "meshctl traffic shift.*notification-service.*--canary.*100"
+  alertmgr:
+    alerts:
+      - service: payment-service
+        severity: critical
+      - service: notification-service
+        severity: critical
+    incidents:
+      - title_contains: "service"
+        linked_alerts_count_gte: 2
+        timeline:
+          - entry_contains: "reroute"
+    command_history:
+      - pattern: "alertmgr alert create.*payment-service"
+      - pattern: "alertmgr alert create.*notification-service"
+      - pattern: "alertmgr incident create"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 18
+optimal_commands: 10
+timeout_seconds: 150

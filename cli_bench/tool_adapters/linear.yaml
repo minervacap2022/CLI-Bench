@@ -1,0 +1,129 @@
+name: linear-cli
+description: Linear CLI for managing issues, projects, and teams in Linear project management
+binary: linear
+auth:
+  type: env_var
+  key: LINEAR_API_KEY
+commands:
+  - name: issue list
+    description: List issues with optional filtering by project, assignee, or status
+    args:
+      - name: project
+        type: string
+        required: false
+        description: Filter by project name
+      - name: assignee
+        type: string
+        required: false
+        description: Filter by assignee username
+      - name: status
+        type: enum
+        required: false
+        description: Filter by issue status
+        values: ["Todo", "In Progress", "Done", "Cancelled"]
+    output_format: json
+    side_effects: false
+    example: "linear issue list --project Backend --status 'In Progress'"
+
+  - name: issue get
+    description: Get a single issue by ID
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Issue identifier (e.g. ISS-42)
+    output_format: json
+    side_effects: false
+    example: "linear issue get --id ISS-42"
+
+  - name: issue create
+    description: Create a new issue
+    args:
+      - name: title
+        type: string
+        required: true
+        description: Issue title
+      - name: description
+        type: string
+        required: false
+        description: Issue description
+      - name: assignee
+        type: string
+        required: false
+        description: Username to assign
+      - name: project
+        type: string
+        required: false
+        description: Project to associate with
+      - name: priority
+        type: int
+        required: false
+        description: Priority level (0=none, 1=urgent, 2=high, 3=medium, 4=low)
+      - name: label
+        type: string
+        required: false
+        description: Label to apply (can be repeated)
+    output_format: json
+    side_effects: true
+    example: "linear issue create --title 'Fix login bug' --assignee alice --priority 1 --label bug"
+
+  - name: issue update
+    description: Update fields on an existing issue
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Issue identifier
+      - name: assignee
+        type: string
+        required: false
+        description: New assignee username
+      - name: status
+        type: enum
+        required: false
+        description: New status
+        values: ["Todo", "In Progress", "Done", "Cancelled"]
+      - name: priority
+        type: int
+        required: false
+        description: New priority level
+      - name: title
+        type: string
+        required: false
+        description: New title
+    output_format: json
+    side_effects: true
+    example: "linear issue update --id ISS-42 --status 'In Progress' --assignee bob"
+
+  - name: issue comment
+    description: Add a comment to an issue
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Issue identifier
+      - name: body
+        type: string
+        required: true
+        description: Comment text
+      - name: author
+        type: string
+        required: false
+        description: Comment author (defaults to current user)
+    output_format: json
+    side_effects: true
+    example: "linear issue comment --id ISS-42 --body 'Working on this now'"
+
+  - name: project list
+    description: List all projects
+    args: []
+    output_format: json
+    side_effects: false
+    example: "linear project list"
+
+  - name: team list
+    description: List all teams with members
+    args: []
+    output_format: json
+    side_effects: false
+    example: "linear team list"

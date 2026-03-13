@@ -1,0 +1,70 @@
+id: cb-021
+title: "Find urgent GitHub issues and post summary to Slack"
+difficulty: medium
+category: composite
+description: |
+  Find all open GitHub issues in "acme-corp/web-platform" that have the label
+  "priority:critical" or "priority:high". Then compose a summary of these issues
+  and post it to the #engineering Slack channel with the format:
+  "Urgent Issues Report: N issues require attention" followed by a list.
+tools_provided:
+  - gh
+  - slack
+initial_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        issues:
+          - number: 42
+            title: "Fix login redirect loop"
+            state: open
+            assignee: alice
+            labels: ["bug", "priority:critical"]
+          - number: 45
+            title: "Memory leak in websocket handler"
+            state: open
+            assignee: null
+            labels: ["bug", "priority:high"]
+          - number: 46
+            title: "Migrate to Node 20"
+            state: open
+            assignee: dave
+            labels: ["chore"]
+          - number: 47
+            title: "SQL injection in search endpoint"
+            state: open
+            assignee: bob
+            labels: ["security", "priority:critical"]
+          - number: 48
+            title: "Add dark mode toggle"
+            state: open
+            assignee: carol
+            labels: ["enhancement", "priority:low"]
+  slack:
+    channels:
+      - id: C002
+        name: engineering
+        is_private: false
+        num_members: 22
+        messages: []
+expected_state:
+  gh:
+    command_history:
+      - pattern: "gh issue list.*--label.*priority"
+  slack:
+    channels:
+      - name: engineering
+        messages:
+          - text_contains: "Urgent Issues Report"
+          - text_contains: "login redirect"
+          - text_contains: "Memory leak"
+          - text_contains: "SQL injection"
+    command_history:
+      - pattern: "slack message send.*--channel.*engineering"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 8
+optimal_commands: 3
+timeout_seconds: 60

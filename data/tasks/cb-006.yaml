@@ -1,0 +1,41 @@
+id: cb-006
+title: "Create a Linear issue with priority"
+difficulty: easy
+category: project_mgmt
+description: |
+  Create a new issue in the Linear team "Platform" with the title
+  "Implement webhook retry logic with exponential backoff", set the priority
+  to "urgent", and assign it to "sarah@acme.com".
+tools_provided:
+  - linear
+initial_state:
+  linear:
+    teams:
+      - name: Platform
+        key: ACM
+        members:
+          - sarah@acme.com
+          - mark@acme.com
+    issues:
+      - id: ACM-110
+        title: "Existing backlog item"
+        status: backlog
+        priority: low
+        assignee: mark@acme.com
+        team: Platform
+expected_state:
+  linear:
+    issues:
+      - title: "Implement webhook retry logic with exponential backoff"
+        priority: urgent
+        assignee: sarah@acme.com
+        team: Platform
+    command_history:
+      - pattern: "linear issue create.*--team.*Platform.*--priority.*urgent"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

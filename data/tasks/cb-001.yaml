@@ -1,0 +1,55 @@
+id: cb-001
+title: "List open issues in a GitHub repo"
+difficulty: easy
+category: project_mgmt
+description: |
+  List all currently open issues in the repository "acme-corp/web-platform".
+  Display the issue number, title, and assignee for each.
+tools_provided:
+  - gh
+initial_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        issues:
+          - number: 42
+            title: "Fix login redirect loop"
+            state: open
+            assignee: alice
+            labels: ["bug", "auth"]
+          - number: 43
+            title: "Add dark mode support"
+            state: open
+            assignee: bob
+            labels: ["enhancement", "ui"]
+          - number: 44
+            title: "Update README with API docs"
+            state: closed
+            assignee: carol
+            labels: ["docs"]
+          - number: 45
+            title: "Memory leak in websocket handler"
+            state: open
+            assignee: null
+            labels: ["bug", "critical"]
+          - number: 46
+            title: "Migrate to Node 20"
+            state: open
+            assignee: dave
+            labels: ["chore"]
+expected_state:
+  gh:
+    command_history:
+      - pattern: "gh issue list.*--repo acme-corp/web-platform.*--state open"
+    output_contains:
+      - "42"
+      - "43"
+      - "45"
+      - "46"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

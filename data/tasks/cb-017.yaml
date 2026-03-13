@@ -1,0 +1,52 @@
+id: cb-017
+title: "Search Gmail for messages from a sender"
+difficulty: easy
+category: communication
+description: |
+  Search Gmail for all emails from "security@github.com" received in the
+  last 30 days. Display the subject, date, and a snippet of each message.
+tools_provided:
+  - google
+initial_state:
+  google:
+    gmail:
+      messages:
+        - id: msg-001
+          from: "security@github.com"
+          to: "dev@acme.com"
+          subject: "Security advisory: CVE-2026-1234"
+          date: "2026-03-05T08:00:00Z"
+          snippet: "A critical vulnerability has been identified in..."
+        - id: msg-002
+          from: "security@github.com"
+          to: "dev@acme.com"
+          subject: "Dependabot alert: lodash prototype pollution"
+          date: "2026-03-01T12:00:00Z"
+          snippet: "A new Dependabot alert has been created for..."
+        - id: msg-003
+          from: "noreply@linear.app"
+          to: "dev@acme.com"
+          subject: "Issue ACM-101 assigned to you"
+          date: "2026-03-08T09:00:00Z"
+          snippet: "Sarah assigned ACM-101 to you..."
+        - id: msg-004
+          from: "security@github.com"
+          to: "dev@acme.com"
+          subject: "Secret scanning alert: API key exposed"
+          date: "2026-02-25T15:00:00Z"
+          snippet: "A secret has been detected in your repository..."
+expected_state:
+  google:
+    command_history:
+      - pattern: "google gmail search.*from:security@github.com"
+    output_contains:
+      - "CVE-2026-1234"
+      - "Dependabot alert"
+      - "Secret scanning alert"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

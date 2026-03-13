@@ -1,0 +1,53 @@
+id: cb-003
+title: "List channels in Slack workspace"
+difficulty: easy
+category: communication
+description: |
+  List all public channels in the Slack workspace. Show the channel name,
+  member count, and topic for each channel.
+tools_provided:
+  - slack
+initial_state:
+  slack:
+    channels:
+      - id: C001
+        name: general
+        is_private: false
+        num_members: 45
+        topic: "Company-wide announcements"
+      - id: C002
+        name: engineering
+        is_private: false
+        num_members: 22
+        topic: "Engineering discussions"
+      - id: C003
+        name: design-team
+        is_private: true
+        num_members: 8
+        topic: "Design reviews"
+      - id: C004
+        name: random
+        is_private: false
+        num_members: 40
+        topic: "Non-work banter"
+      - id: C005
+        name: incidents
+        is_private: false
+        num_members: 15
+        topic: "Production incident coordination"
+expected_state:
+  slack:
+    command_history:
+      - pattern: "slack channel list"
+    output_contains:
+      - "general"
+      - "engineering"
+      - "random"
+      - "incidents"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

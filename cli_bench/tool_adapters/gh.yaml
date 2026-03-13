@@ -1,0 +1,190 @@
+name: github-cli
+description: GitHub CLI for managing repositories, issues, pull requests, and API access
+binary: gh
+auth:
+  type: env_var
+  key: GITHUB_TOKEN
+commands:
+  - name: issue list
+    description: List issues in a repository with optional filtering by state, label, and assignee
+    args:
+      - name: repo
+        type: string
+        required: true
+        description: Repository in owner/repo format
+      - name: state
+        type: enum
+        required: false
+        description: Filter by issue state
+        values: ["open", "closed", "all"]
+      - name: label
+        type: string
+        required: false
+        description: Filter by label name
+      - name: assignee
+        type: string
+        required: false
+        description: Filter by assignee username
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of issues to return
+    output_format: json
+    side_effects: false
+    example: "gh issue list --repo owner/repo --state open --label bug"
+
+  - name: issue create
+    description: Create a new issue in a repository
+    args:
+      - name: repo
+        type: string
+        required: true
+        description: Repository in owner/repo format
+      - name: title
+        type: string
+        required: true
+        description: Issue title
+      - name: body
+        type: string
+        required: false
+        description: Issue body text
+      - name: label
+        type: string
+        required: false
+        description: Label to apply (can be repeated)
+      - name: assignee
+        type: string
+        required: false
+        description: Username to assign
+    output_format: json
+    side_effects: true
+    example: "gh issue create --repo owner/repo --title 'Bug report' --body 'Details here' --label bug"
+
+  - name: issue edit
+    description: Edit an existing issue by number
+    args:
+      - name: number
+        type: int
+        required: true
+        description: Issue number (positional)
+      - name: repo
+        type: string
+        required: true
+        description: Repository in owner/repo format
+      - name: title
+        type: string
+        required: false
+        description: New issue title
+      - name: add-assignee
+        type: string
+        required: false
+        description: Username to add as assignee
+      - name: add-label
+        type: string
+        required: false
+        description: Label to add (can be repeated)
+    output_format: json
+    side_effects: true
+    example: "gh issue edit 42 --repo owner/repo --add-assignee alice --add-label critical"
+
+  - name: issue view
+    description: View a single issue by number
+    args:
+      - name: number
+        type: int
+        required: true
+        description: Issue number (positional)
+      - name: repo
+        type: string
+        required: true
+        description: Repository in owner/repo format
+    output_format: json
+    side_effects: false
+    example: "gh issue view 42 --repo owner/repo"
+
+  - name: pr list
+    description: List pull requests in a repository
+    args:
+      - name: repo
+        type: string
+        required: true
+        description: Repository in owner/repo format
+      - name: state
+        type: enum
+        required: false
+        description: Filter by PR state
+        values: ["open", "closed", "merged", "all"]
+      - name: author
+        type: string
+        required: false
+        description: Filter by PR author
+    output_format: json
+    side_effects: false
+    example: "gh pr list --repo owner/repo --state open"
+
+  - name: pr create
+    description: Create a new pull request
+    args:
+      - name: repo
+        type: string
+        required: true
+        description: Repository in owner/repo format
+      - name: title
+        type: string
+        required: true
+        description: Pull request title
+      - name: body
+        type: string
+        required: false
+        description: Pull request description
+      - name: base
+        type: string
+        required: false
+        description: Base branch name
+      - name: head
+        type: string
+        required: true
+        description: Head branch name
+    output_format: json
+    side_effects: true
+    example: "gh pr create --repo owner/repo --title 'Feature X' --head feature-x --base main"
+
+  - name: api
+    description: Make a raw GitHub API request to any endpoint
+    args:
+      - name: endpoint
+        type: string
+        required: true
+        description: API endpoint path (e.g. repos/owner/repo/commits)
+      - name: method
+        type: enum
+        required: false
+        description: HTTP method
+        values: ["GET", "POST", "PUT", "PATCH", "DELETE"]
+      - name: field
+        type: string
+        required: false
+        description: JSON field to send in request body (key=value)
+    output_format: json
+    side_effects: false
+    example: "gh api repos/owner/repo/commits"
+
+  - name: issue close
+    description: Close an issue by number
+    args:
+      - name: number
+        type: int
+        required: true
+        description: Issue number (positional)
+      - name: repo
+        type: string
+        required: true
+        description: Repository in owner/repo format
+      - name: reason
+        type: enum
+        required: false
+        description: Reason for closing
+        values: ["completed", "not_planned"]
+    output_format: json
+    side_effects: true
+    example: "gh issue close 42 --repo owner/repo --reason completed"

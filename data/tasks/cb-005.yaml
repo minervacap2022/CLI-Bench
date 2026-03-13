@@ -1,0 +1,57 @@
+id: cb-005
+title: "List issues assigned to a specific user in Linear"
+difficulty: easy
+category: project_mgmt
+description: |
+  List all issues in Linear that are currently assigned to the user "sarah@acme.com".
+  Show the issue identifier, title, status, and priority.
+tools_provided:
+  - linear
+initial_state:
+  linear:
+    issues:
+      - id: ACM-101
+        title: "Implement OAuth2 PKCE flow"
+        status: in_progress
+        priority: high
+        assignee: sarah@acme.com
+        team: Platform
+      - id: ACM-102
+        title: "Database migration script"
+        status: todo
+        priority: medium
+        assignee: sarah@acme.com
+        team: Platform
+      - id: ACM-103
+        title: "Update CI pipeline"
+        status: in_progress
+        priority: low
+        assignee: mark@acme.com
+        team: Platform
+      - id: ACM-104
+        title: "Add Sentry error tracking"
+        status: backlog
+        priority: high
+        assignee: sarah@acme.com
+        team: Platform
+      - id: ACM-105
+        title: "Refactor user service"
+        status: done
+        priority: medium
+        assignee: mark@acme.com
+        team: Platform
+expected_state:
+  linear:
+    command_history:
+      - pattern: "linear issue list.*--assignee.*sarah"
+    output_contains:
+      - "ACM-101"
+      - "ACM-102"
+      - "ACM-104"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

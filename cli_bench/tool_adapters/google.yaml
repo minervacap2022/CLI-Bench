@@ -1,0 +1,180 @@
+name: google-workspace-cli
+description: Google Workspace CLI for Calendar, Gmail, and Drive operations
+binary: google
+auth:
+  type: oauth
+  key: GOOGLE_OAUTH_CREDENTIALS
+commands:
+  - name: calendar event list
+    description: List calendar events with optional date range filtering
+    args:
+      - name: calendar
+        type: string
+        required: false
+        description: Calendar ID (defaults to primary)
+      - name: start
+        type: datetime
+        required: false
+        description: Start datetime filter (ISO 8601)
+      - name: end
+        type: datetime
+        required: false
+        description: End datetime filter (ISO 8601)
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of events to return
+    output_format: json
+    side_effects: false
+    example: "google calendar event list --start 2026-03-01T00:00:00Z --end 2026-03-31T23:59:59Z"
+
+  - name: calendar event create
+    description: Create a new calendar event
+    args:
+      - name: title
+        type: string
+        required: true
+        description: Event title/summary
+      - name: start
+        type: datetime
+        required: true
+        description: Event start datetime (ISO 8601)
+      - name: end
+        type: datetime
+        required: true
+        description: Event end datetime (ISO 8601)
+      - name: description
+        type: string
+        required: false
+        description: Event description
+      - name: attendees
+        type: string
+        required: false
+        description: Comma-separated email addresses of attendees
+      - name: location
+        type: string
+        required: false
+        description: Event location
+      - name: calendar
+        type: string
+        required: false
+        description: Calendar ID (defaults to primary)
+    output_format: json
+    side_effects: true
+    example: "google calendar event create --title 'Team Standup' --start 2026-03-15T09:00:00Z --end 2026-03-15T09:30:00Z --attendees alice@co.com,bob@co.com"
+
+  - name: calendar event delete
+    description: Delete a calendar event by ID
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Event ID
+      - name: calendar
+        type: string
+        required: false
+        description: Calendar ID (defaults to primary)
+    output_format: json
+    side_effects: true
+    example: "google calendar event delete --id evt-001"
+
+  - name: gmail send
+    description: Send an email via Gmail
+    args:
+      - name: to
+        type: string
+        required: true
+        description: Recipient email address
+      - name: subject
+        type: string
+        required: true
+        description: Email subject line
+      - name: body
+        type: string
+        required: true
+        description: Email body text
+      - name: cc
+        type: string
+        required: false
+        description: CC recipients (comma-separated)
+    output_format: json
+    side_effects: true
+    example: "google gmail send --to alice@co.com --subject 'Meeting Follow-up' --body 'Notes attached'"
+
+  - name: gmail search
+    description: Search Gmail messages by query
+    args:
+      - name: query
+        type: string
+        required: true
+        description: Gmail search query (supports Gmail search syntax)
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of results
+      - name: label
+        type: string
+        required: false
+        description: Filter by label
+    output_format: json
+    side_effects: false
+    example: "google gmail search --query 'from:alice subject:meeting' --limit 10"
+
+  - name: gmail list
+    description: List recent emails in the inbox
+    args:
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of emails to return
+      - name: label
+        type: string
+        required: false
+        description: Filter by label
+      - name: unread
+        type: bool
+        required: false
+        description: Only show unread messages
+    output_format: json
+    side_effects: false
+    example: "google gmail list --limit 20 --unread"
+
+  - name: drive list
+    description: List files in Google Drive
+    args:
+      - name: folder
+        type: string
+        required: false
+        description: Folder ID to list contents of
+      - name: type
+        type: enum
+        required: false
+        description: Filter by file type
+        values: ["document", "spreadsheet", "presentation", "folder", "pdf", "image"]
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of files to return
+    output_format: json
+    side_effects: false
+    example: "google drive list --folder root --type document"
+
+  - name: drive search
+    description: Search for files in Google Drive
+    args:
+      - name: query
+        type: string
+        required: true
+        description: Search query string
+      - name: type
+        type: enum
+        required: false
+        description: Filter by file type
+        values: ["document", "spreadsheet", "presentation", "folder", "pdf", "image"]
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of results
+    output_format: json
+    side_effects: false
+    example: "google drive search --query 'quarterly report' --type spreadsheet"

@@ -1,0 +1,74 @@
+id: cb-028
+title: "Find large files in Google Drive and post report to Slack"
+difficulty: medium
+category: composite
+description: |
+  List all files in Google Drive that are larger than 50 MB. Create a summary
+  report with the file name, size, owner, and last modified date, then post
+  this report to the #engineering Slack channel with a message asking owners
+  to archive or clean up unused large files.
+tools_provided:
+  - google
+  - slack
+initial_state:
+  google:
+    drive:
+      all_files:
+        - name: "production-db-dump-20260301.sql"
+          size_mb: 2400
+          modified: "2026-03-01T03:00:00Z"
+          owner: "ops-alice@acme.com"
+          path: "Backups/"
+        - name: "demo-video-q1.mp4"
+          size_mb: 350
+          modified: "2026-02-15T14:00:00Z"
+          owner: "marketing@acme.com"
+          path: "Marketing/"
+        - name: "Architecture Diagram.png"
+          size_mb: 2
+          modified: "2026-03-10T09:00:00Z"
+          owner: "bob@acme.com"
+          path: "Engineering/"
+        - name: "ml-model-weights-v3.bin"
+          size_mb: 890
+          modified: "2026-01-20T10:00:00Z"
+          owner: "data-team@acme.com"
+          path: "ML/"
+        - name: "load-test-results.csv"
+          size_mb: 75
+          modified: "2026-03-08T16:00:00Z"
+          owner: "sarah@acme.com"
+          path: "Engineering/Testing/"
+        - name: "sprint-notes.docx"
+          size_mb: 1
+          modified: "2026-03-11T09:00:00Z"
+          owner: "alice@acme.com"
+          path: "Engineering/"
+  slack:
+    channels:
+      - id: C002
+        name: engineering
+        is_private: false
+        num_members: 22
+        messages: []
+expected_state:
+  google:
+    command_history:
+      - pattern: "google drive list.*--min-size"
+  slack:
+    channels:
+      - name: engineering
+        messages:
+          - text_contains: "production-db-dump"
+          - text_contains: "demo-video"
+          - text_contains: "ml-model-weights"
+          - text_contains: "load-test-results"
+    command_history:
+      - pattern: "slack message send.*--channel.*engineering"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 8
+optimal_commands: 3
+timeout_seconds: 60

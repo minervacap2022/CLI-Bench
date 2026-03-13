@@ -1,0 +1,41 @@
+id: cb-010
+title: "Send a DM to a user on Slack"
+difficulty: easy
+category: communication
+description: |
+  Send a direct message to the Slack user "alice" with the text:
+  "Hey Alice, can you review PR #234 when you get a chance? It's the auth fix we discussed."
+tools_provided:
+  - slack
+initial_state:
+  slack:
+    users:
+      - id: U001
+        name: alice
+        real_name: "Alice Chen"
+        status: active
+      - id: U002
+        name: bob
+        real_name: "Bob Smith"
+        status: active
+      - id: U003
+        name: carol
+        real_name: "Carol Davis"
+        status: away
+    direct_messages:
+      alice: []
+      bob: []
+expected_state:
+  slack:
+    direct_messages:
+      alice:
+        - text_contains: "review PR #234"
+    command_history:
+      - pattern: "slack message send.*--user.*alice"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

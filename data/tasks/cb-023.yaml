@@ -1,0 +1,83 @@
+id: cb-023
+title: "Sync GitHub issue labels with Linear issue priorities"
+difficulty: medium
+category: composite
+description: |
+  For each open issue in the GitHub repo "acme-corp/web-platform" that has a
+  "linear:" prefixed label (e.g., "linear:ACM-101"), find the corresponding
+  Linear issue and update its priority to match the GitHub issue's priority
+  label. Map as follows: "priority:critical" -> urgent, "priority:high" -> high,
+  "priority:medium" -> medium, "priority:low" -> low.
+tools_provided:
+  - gh
+  - linear
+initial_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        issues:
+          - number: 50
+            title: "Auth token expiry handling"
+            state: open
+            labels: ["bug", "priority:critical", "linear:ACM-201"]
+          - number: 51
+            title: "API rate limiting"
+            state: open
+            labels: ["enhancement", "priority:medium", "linear:ACM-202"]
+          - number: 52
+            title: "Fix CORS headers"
+            state: open
+            labels: ["bug", "priority:high", "linear:ACM-203"]
+          - number: 53
+            title: "Update docs"
+            state: open
+            labels: ["docs"]
+          - number: 54
+            title: "Logging improvements"
+            state: closed
+            labels: ["chore", "priority:low", "linear:ACM-204"]
+  linear:
+    issues:
+      - id: ACM-201
+        title: "Auth token expiry handling"
+        status: in_progress
+        priority: medium
+        team: Platform
+      - id: ACM-202
+        title: "API rate limiting"
+        status: todo
+        priority: low
+        team: Platform
+      - id: ACM-203
+        title: "Fix CORS headers"
+        status: todo
+        priority: low
+        team: Platform
+      - id: ACM-204
+        title: "Logging improvements"
+        status: done
+        priority: low
+        team: Platform
+expected_state:
+  gh:
+    command_history:
+      - pattern: "gh issue list.*--repo acme-corp/web-platform"
+  linear:
+    issues:
+      - id: ACM-201
+        priority: urgent
+      - id: ACM-202
+        priority: medium
+      - id: ACM-203
+        priority: high
+    command_history:
+      - pattern: "linear issue update ACM-201.*--priority.*urgent"
+      - pattern: "linear issue update ACM-202.*--priority.*medium"
+      - pattern: "linear issue update ACM-203.*--priority.*high"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 10
+optimal_commands: 5
+timeout_seconds: 90

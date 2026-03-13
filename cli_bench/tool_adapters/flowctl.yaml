@@ -1,0 +1,139 @@
+name: flowctl
+description: Workflow engine and approval gate manager for orchestrating multi-step processes with human-in-the-loop approvals
+binary: flowctl
+auth:
+  type: env_var
+  key: FLOWCTL_API_KEY
+commands:
+  - name: workflow list
+    description: List workflows with optional filtering by status
+    args:
+      - name: status
+        type: enum
+        required: false
+        description: Filter by workflow status
+        values: ["active", "paused", "completed", "failed"]
+      - name: owner
+        type: string
+        required: false
+        description: Filter by workflow owner
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of workflows to return
+    output_format: json
+    side_effects: false
+    example: "flowctl workflow list --status active --owner alice"
+
+  - name: workflow create
+    description: Create a new workflow definition with named steps
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Workflow name (unique identifier)
+      - name: steps
+        type: json
+        required: true
+        description: "Ordered list of step definitions as JSON array [{\"name\": str, \"action\": str, \"config\": dict}]"
+      - name: description
+        type: string
+        required: false
+        description: Human-readable description
+      - name: owner
+        type: string
+        required: false
+        description: Workflow owner (defaults to current user)
+    output_format: json
+    side_effects: true
+    example: "flowctl workflow create --name deploy-prod --steps '[{\"name\": \"build\", \"action\": \"run_pipeline\"}, {\"name\": \"approve\", \"action\": \"gate\"}]'"
+
+  - name: workflow get
+    description: Get detailed workflow definition by ID
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Workflow ID
+    output_format: json
+    side_effects: false
+    example: "flowctl workflow get --id wf-001"
+
+  - name: gate create
+    description: Create an approval gate attached to a workflow
+    args:
+      - name: workflow-id
+        type: string
+        required: true
+        description: Parent workflow ID
+      - name: approvers
+        type: string
+        required: true
+        description: Comma-separated list of required approver usernames
+      - name: timeout
+        type: int
+        required: false
+        description: Gate timeout in hours (0 = no timeout)
+      - name: min-approvals
+        type: int
+        required: false
+        description: Minimum number of approvals required (defaults to all approvers)
+    output_format: json
+    side_effects: true
+    example: "flowctl gate create --workflow-id wf-001 --approvers alice,bob --timeout 24 --min-approvals 1"
+
+  - name: gate approve
+    description: Approve a pending gate
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Gate ID
+      - name: comment
+        type: string
+        required: false
+        description: Approval comment
+    output_format: json
+    side_effects: true
+    example: "flowctl gate approve --id gate-001 --comment 'Looks good, ship it'"
+
+  - name: gate reject
+    description: Reject a pending gate with a reason
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Gate ID
+      - name: reason
+        type: string
+        required: true
+        description: Rejection reason
+    output_format: json
+    side_effects: true
+    example: "flowctl gate reject --id gate-001 --reason 'Missing test coverage'"
+
+  - name: run trigger
+    description: Trigger a workflow execution
+    args:
+      - name: workflow-id
+        type: string
+        required: true
+        description: Workflow ID to execute
+      - name: params
+        type: json
+        required: false
+        description: Runtime parameters as JSON object
+    output_format: json
+    side_effects: true
+    example: "flowctl run trigger --workflow-id wf-001 --params '{\"version\": \"2.1.0\"}'"
+
+  - name: run status
+    description: Check the status of a workflow run including step progress
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Run execution ID
+    output_format: json
+    side_effects: false
+    example: "flowctl run status --id run-001"

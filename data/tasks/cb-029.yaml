@@ -1,0 +1,81 @@
+id: cb-029
+title: "Cross-reference GitHub PRs with Linear issues"
+difficulty: medium
+category: composite
+description: |
+  List all open pull requests in "acme-corp/web-platform" that reference a
+  Linear issue in their title or body (pattern: ACM-NNN). For each referenced
+  Linear issue, update its status to "in_progress" if it is currently "todo".
+  Report any PRs that reference non-existent Linear issues.
+tools_provided:
+  - gh
+  - linear
+initial_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        pull_requests:
+          - number: 200
+            title: "feat: Implement PKCE flow [ACM-501]"
+            state: open
+            author: alice
+            body: "Implements the OAuth2 PKCE flow as described in ACM-501."
+          - number: 201
+            title: "fix: CORS headers [ACM-502]"
+            state: open
+            author: bob
+            body: "Fixes CORS header configuration per ACM-502."
+          - number: 202
+            title: "chore: Update dependencies"
+            state: open
+            author: carol
+            body: "Routine dependency updates, no Linear issue."
+          - number: 203
+            title: "feat: Rate limiter [ACM-503]"
+            state: open
+            author: dave
+            body: "Implements rate limiting middleware. Refs ACM-503."
+          - number: 204
+            title: "fix: Session handling [ACM-999]"
+            state: open
+            author: alice
+            body: "Fix session timeout. References ACM-999."
+  linear:
+    issues:
+      - id: ACM-501
+        title: "Implement OAuth2 PKCE flow"
+        status: todo
+        priority: high
+        team: Platform
+      - id: ACM-502
+        title: "Fix CORS headers"
+        status: in_progress
+        priority: medium
+        team: Platform
+      - id: ACM-503
+        title: "Implement rate limiter"
+        status: todo
+        priority: high
+        team: Platform
+expected_state:
+  gh:
+    command_history:
+      - pattern: "gh pr list.*--repo acme-corp/web-platform"
+  linear:
+    issues:
+      - id: ACM-501
+        status: in_progress
+      - id: ACM-502
+        status: in_progress
+      - id: ACM-503
+        status: in_progress
+    command_history:
+      - pattern: "linear issue update ACM-501.*--status.*in_progress"
+      - pattern: "linear issue update ACM-503.*--status.*in_progress"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 10
+optimal_commands: 6
+timeout_seconds: 90

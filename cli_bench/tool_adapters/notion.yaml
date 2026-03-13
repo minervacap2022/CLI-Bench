@@ -1,0 +1,141 @@
+name: notion-cli
+description: Notion CLI for managing pages, databases, blocks, and search
+binary: notion
+auth:
+  type: env_var
+  key: NOTION_API_KEY
+commands:
+  - name: page list
+    description: List pages with optional filtering by parent page or database
+    args:
+      - name: parent
+        type: string
+        required: false
+        description: Parent page or database ID to filter by
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of pages to return
+    output_format: json
+    side_effects: false
+    example: "notion page list --parent db-001 --limit 20"
+
+  - name: page create
+    description: Create a new page under a parent page or database
+    args:
+      - name: title
+        type: string
+        required: true
+        description: Page title
+      - name: parent
+        type: string
+        required: true
+        description: Parent page or database ID
+      - name: content
+        type: string
+        required: false
+        description: Initial page content as plain text
+      - name: icon
+        type: string
+        required: false
+        description: Page icon emoji
+    output_format: json
+    side_effects: true
+    example: "notion page create --title 'Meeting Notes' --parent db-001 --content 'Discussion items'"
+
+  - name: page update
+    description: Update an existing page title or content
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Page ID
+      - name: title
+        type: string
+        required: false
+        description: New page title
+      - name: content
+        type: string
+        required: false
+        description: New page content
+      - name: archived
+        type: bool
+        required: false
+        description: Archive or unarchive the page
+    output_format: json
+    side_effects: true
+    example: "notion page update --id page-001 --title 'Updated Title'"
+
+  - name: db query
+    description: Query a database with optional filter and sort
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Database ID
+      - name: filter
+        type: json
+        required: false
+        description: Filter object as JSON
+      - name: sort
+        type: string
+        required: false
+        description: Property name to sort by
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of results
+    output_format: json
+    side_effects: false
+    example: "notion db query --id db-001 --filter '{\"status\": \"active\"}'"
+
+  - name: block append
+    description: Append content blocks to a page
+    args:
+      - name: page-id
+        type: string
+        required: true
+        description: Page ID to append blocks to
+      - name: content
+        type: string
+        required: true
+        description: Text content to append as a paragraph block
+      - name: type
+        type: enum
+        required: false
+        description: Block type
+        values: ["paragraph", "heading_1", "heading_2", "heading_3", "bulleted_list", "numbered_list", "code"]
+    output_format: json
+    side_effects: true
+    example: "notion block append --page-id page-001 --content 'New paragraph' --type paragraph"
+
+  - name: search
+    description: Search across all pages and databases by text query
+    args:
+      - name: query
+        type: string
+        required: true
+        description: Search query string
+      - name: type
+        type: enum
+        required: false
+        description: Filter results by object type
+        values: ["page", "database"]
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of results
+    output_format: json
+    side_effects: false
+    example: "notion search --query 'meeting notes' --type page"
+
+  - name: page get
+    description: Get a single page by ID with its content
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Page ID
+    output_format: json
+    side_effects: false
+    example: "notion page get --id page-001"

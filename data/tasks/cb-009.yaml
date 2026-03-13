@@ -1,0 +1,48 @@
+id: cb-009
+title: "List projects in Linear"
+difficulty: easy
+category: project_mgmt
+description: |
+  List all projects in the Linear workspace. Show the project name, status,
+  lead, and target date for each project.
+tools_provided:
+  - linear
+initial_state:
+  linear:
+    projects:
+      - name: "Q1 Platform Migration"
+        status: in_progress
+        lead: sarah@acme.com
+        target_date: "2026-03-31"
+        teams: ["Platform"]
+      - name: "Mobile App v3"
+        status: in_progress
+        lead: mark@acme.com
+        target_date: "2026-04-15"
+        teams: ["Mobile"]
+      - name: "Security Audit Remediation"
+        status: planned
+        lead: alice@acme.com
+        target_date: "2026-05-01"
+        teams: ["Platform", "Security"]
+      - name: "Design System 2.0"
+        status: completed
+        lead: carol@acme.com
+        target_date: "2026-02-28"
+        teams: ["Design", "Frontend"]
+expected_state:
+  linear:
+    command_history:
+      - pattern: "linear project list"
+    output_contains:
+      - "Q1 Platform Migration"
+      - "Mobile App v3"
+      - "Security Audit Remediation"
+      - "Design System 2.0"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

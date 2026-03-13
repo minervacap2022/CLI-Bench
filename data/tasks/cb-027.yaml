@@ -1,0 +1,71 @@
+id: cb-027
+title: "Search Gmail for meeting invites and create Linear tasks"
+difficulty: medium
+category: composite
+description: |
+  Search Gmail for emails with subject containing "Action Items" or "Follow-up"
+  received in the last 7 days. Extract action items from these emails and create
+  corresponding Linear issues in the "Platform" team with appropriate priorities.
+tools_provided:
+  - google
+  - linear
+initial_state:
+  google:
+    gmail:
+      messages:
+        - id: msg-101
+          from: "alice@acme.com"
+          subject: "Meeting Action Items - Sprint Review 3/10"
+          date: "2026-03-10T16:00:00Z"
+          body: |
+            Action items from today's sprint review:
+            1. [HIGH] Investigate performance regression in search API
+            2. [MEDIUM] Update API documentation for v2 endpoints
+            3. [LOW] Clean up deprecated feature flags
+        - id: msg-102
+          from: "bob@acme.com"
+          subject: "Follow-up: Security Audit Discussion"
+          date: "2026-03-11T11:00:00Z"
+          body: |
+            Follow-up tasks:
+            1. [URGENT] Patch CVE-2026-5678 in auth library
+            2. [HIGH] Enable CSP headers on all endpoints
+        - id: msg-103
+          from: "carol@acme.com"
+          subject: "Lunch plans for Friday"
+          date: "2026-03-11T12:00:00Z"
+          body: "Anyone want to try the new ramen place?"
+        - id: msg-104
+          from: "noreply@github.com"
+          subject: "PR Review Requested"
+          date: "2026-03-11T14:00:00Z"
+          body: "bob requested your review on PR #567"
+  linear:
+    teams:
+      - name: Platform
+        key: ACM
+        members:
+          - sarah@acme.com
+          - mark@acme.com
+    issues: []
+expected_state:
+  google:
+    command_history:
+      - pattern: "google gmail search.*(Action Items|Follow-up)"
+  linear:
+    issues:
+      - title_contains: "performance regression"
+        priority: high
+        team: Platform
+      - title_contains: "CVE-2026-5678"
+        priority: urgent
+        team: Platform
+    command_history:
+      - pattern: "linear issue create.*--team.*Platform"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 10
+optimal_commands: 6
+timeout_seconds: 90

@@ -1,0 +1,96 @@
+id: cb-037
+title: "(alertmgr) Incident management: acknowledge alerts, create incident, escalate"
+difficulty: hard
+category: custom_cli
+description: |
+  Using the alertmgr CLI, handle a production incident. First, list all
+  firing alerts to understand the scope. Acknowledge all critical alerts
+  related to the "payment-service". Create a new incident titled
+  "Payment Service Degradation" with severity "P1" and link the acknowledged
+  alerts to it. Assign the incident to the on-call responder. If no on-call
+  responder is available, escalate to the engineering manager. Add a timeline
+  entry describing the initial findings.
+tools_provided:
+  - alertmgr
+initial_state:
+  alertmgr:
+    alerts:
+      - id: alert-301
+        name: "High error rate on payment-service"
+        severity: critical
+        status: firing
+        service: payment-service
+        started_at: "2026-03-12T14:00:00Z"
+        labels:
+          team: payments
+          env: production
+      - id: alert-302
+        name: "Payment-service latency > 5s"
+        severity: critical
+        status: firing
+        service: payment-service
+        started_at: "2026-03-12T14:02:00Z"
+        labels:
+          team: payments
+          env: production
+      - id: alert-303
+        name: "Database connection pool exhaustion"
+        severity: warning
+        status: firing
+        service: payment-service
+        started_at: "2026-03-12T14:05:00Z"
+        labels:
+          team: payments
+          env: production
+      - id: alert-304
+        name: "CDN cache hit ratio below threshold"
+        severity: warning
+        status: firing
+        service: cdn-edge
+        started_at: "2026-03-12T13:00:00Z"
+        labels:
+          team: infrastructure
+          env: production
+      - id: alert-305
+        name: "Disk usage above 85%"
+        severity: info
+        status: firing
+        service: log-aggregator
+        started_at: "2026-03-12T12:00:00Z"
+        labels:
+          team: infrastructure
+          env: production
+    incidents: []
+    oncall:
+      payments: null
+      infrastructure: ops-alice@acme.com
+    escalation:
+      payments: eng-manager@acme.com
+      infrastructure: vp-infra@acme.com
+expected_state:
+  alertmgr:
+    alerts:
+      - id: alert-301
+        status: acknowledged
+      - id: alert-302
+        status: acknowledged
+    incidents:
+      - title: "Payment Service Degradation"
+        severity: P1
+        assignee: eng-manager@acme.com
+        linked_alerts: ["alert-301", "alert-302"]
+        timeline:
+          - entry_contains: "initial"
+    command_history:
+      - pattern: "alertmgr alert list.*--status.*firing"
+      - pattern: "alertmgr alert ack.*alert-301"
+      - pattern: "alertmgr alert ack.*alert-302"
+      - pattern: "alertmgr incident create.*--severity.*P1"
+      - pattern: "alertmgr (oncall|escalat)"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 15
+optimal_commands: 8
+timeout_seconds: 120

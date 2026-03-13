@@ -1,0 +1,132 @@
+name: kforge
+description: Artifact registry and build pipeline manager for managing container images, packages, and deployment pipelines
+binary: kforge
+auth:
+  type: env_var
+  key: KFORGE_API_TOKEN
+commands:
+  - name: artifact list
+    description: List artifacts in a namespace with optional filtering by type and date
+    args:
+      - name: namespace
+        type: string
+        required: true
+        description: Artifact namespace (e.g. team-backend)
+      - name: type
+        type: enum
+        required: false
+        description: Filter by artifact type
+        values: ["docker", "npm", "pypi", "binary"]
+      - name: since
+        type: datetime
+        required: false
+        description: Only show artifacts published after this date (ISO 8601)
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of artifacts to return
+    output_format: json
+    side_effects: false
+    example: "kforge artifact list --namespace team-backend --type docker --since 2026-03-01T00:00:00Z"
+
+  - name: artifact inspect
+    description: Get detailed metadata for a specific artifact including layers, size, and build info
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Artifact ID (e.g. art-a1b2c3)
+    output_format: json
+    side_effects: false
+    example: "kforge artifact inspect --id art-a1b2c3"
+
+  - name: pipeline trigger
+    description: Trigger a deployment pipeline for an artifact to a target environment
+    args:
+      - name: artifact
+        type: string
+        required: true
+        description: Artifact ID to deploy
+      - name: target
+        type: enum
+        required: true
+        description: Target deployment environment
+        values: ["staging", "production"]
+      - name: params
+        type: json
+        required: false
+        description: Pipeline parameters as JSON object
+      - name: dry-run
+        type: bool
+        required: false
+        description: Simulate the pipeline without executing
+    output_format: json
+    side_effects: true
+    example: "kforge pipeline trigger --artifact art-a1b2c3 --target staging --params '{\"replicas\": 3}'"
+
+  - name: pipeline status
+    description: Check the status of a running or completed pipeline execution
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Pipeline execution ID (e.g. pipe-x1y2z3)
+    output_format: json
+    side_effects: false
+    example: "kforge pipeline status --id pipe-x1y2z3"
+
+  - name: registry create
+    description: Create a new artifact namespace/registry
+    args:
+      - name: namespace
+        type: string
+        required: true
+        description: Namespace name (must be unique, lowercase with hyphens)
+      - name: description
+        type: string
+        required: true
+        description: Human-readable description of the registry
+      - name: visibility
+        type: enum
+        required: false
+        description: Registry visibility
+        values: ["private", "internal", "public"]
+    output_format: json
+    side_effects: true
+    example: "kforge registry create --namespace ml-models --description 'ML model artifacts' --visibility internal"
+
+  - name: artifact promote
+    description: Promote an artifact from one environment to another
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Artifact ID to promote
+      - name: from
+        type: enum
+        required: true
+        description: Source environment
+        values: ["staging", "production"]
+      - name: to
+        type: enum
+        required: true
+        description: Destination environment
+        values: ["staging", "production"]
+    output_format: json
+    side_effects: true
+    example: "kforge artifact promote --id art-a1b2c3 --from staging --to production"
+
+  - name: artifact delete
+    description: Delete an artifact by ID (cannot delete promoted artifacts)
+    args:
+      - name: id
+        type: string
+        required: true
+        description: Artifact ID
+      - name: force
+        type: bool
+        required: false
+        description: Force deletion even if artifact has active deployments
+    output_format: json
+    side_effects: true
+    example: "kforge artifact delete --id art-a1b2c3"

@@ -1,0 +1,41 @@
+id: cb-014
+title: "Create a Notion page"
+difficulty: easy
+category: data_ops
+description: |
+  Create a new Notion page under the "Engineering Wiki" parent with the title
+  "Redis Caching Strategy". The page content should describe a caching approach
+  for the user service with TTL policies.
+tools_provided:
+  - notion
+initial_state:
+  notion:
+    pages:
+      - id: pg-001
+        title: "Engineering Runbook"
+        last_edited: "2026-03-10T16:00:00Z"
+        parent: "Engineering Wiki"
+        created_by: alice
+      - id: pg-004
+        title: "Incident Post-Mortem Template"
+        last_edited: "2026-03-11T09:00:00Z"
+        parent: "Engineering Wiki"
+        created_by: bob
+    databases:
+      - id: db-001
+        title: "Engineering Wiki"
+expected_state:
+  notion:
+    pages:
+      - title: "Redis Caching Strategy"
+        parent: "Engineering Wiki"
+        content_contains: "caching"
+    command_history:
+      - pattern: "notion page create.*--parent.*Engineering Wiki.*--title.*Redis Caching Strategy"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

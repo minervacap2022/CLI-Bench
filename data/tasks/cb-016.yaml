@@ -1,0 +1,43 @@
+id: cb-016
+title: "Create a Jira issue"
+difficulty: easy
+category: project_mgmt
+description: |
+  Create a new Jira issue in the "INFRA" project with summary "Set up
+  centralized log aggregation with Loki", type "Task", priority "High",
+  and assign it to "ops-bob".
+tools_provided:
+  - jira
+initial_state:
+  jira:
+    projects:
+      - key: INFRA
+        name: "Infrastructure"
+        members:
+          - ops-alice
+          - ops-bob
+          - ops-carol
+        issues:
+          - key: INFRA-205
+            summary: "Implement VPC peering for staging"
+            status: "In Progress"
+            assignee: ops-carol
+            priority: Medium
+expected_state:
+  jira:
+    projects:
+      - key: INFRA
+        issues:
+          - summary: "Set up centralized log aggregation with Loki"
+            type: Task
+            priority: High
+            assignee: ops-bob
+    command_history:
+      - pattern: "jira issue create.*--project.*INFRA.*--summary"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

@@ -1,0 +1,62 @@
+id: cb-036
+title: "(flowctl) Create approval workflow: define steps, add gate, trigger run"
+difficulty: hard
+category: custom_cli
+description: |
+  Using the flowctl CLI, create a new approval workflow called
+  "production-deploy-approval" for the web-platform service. The workflow
+  should have three steps: (1) "security-scan" — automated security scanning,
+  (2) "qa-signoff" — manual approval gate requiring sign-off from the QA lead,
+  (3) "release-manager-approval" — manual approval gate requiring the release
+  manager. After creating the workflow, trigger a run of it with the context
+  of artifact version "2.3.1". Check that the workflow run was created
+  successfully and is in "pending" state waiting for the first step.
+tools_provided:
+  - flowctl
+initial_state:
+  flowctl:
+    workflows:
+      - id: wf-001
+        name: "staging-deploy"
+        steps:
+          - name: "lint-check"
+            type: automated
+          - name: "deploy-staging"
+            type: automated
+        status: active
+    runs: []
+    users:
+      - email: qa-lead@acme.com
+        role: qa_lead
+      - email: release-mgr@acme.com
+        role: release_manager
+      - email: security@acme.com
+        role: security_engineer
+expected_state:
+  flowctl:
+    workflows:
+      - name: "production-deploy-approval"
+        steps:
+          - name: "security-scan"
+            type: automated
+          - name: "qa-signoff"
+            type: manual
+            approver_contains: "qa-lead"
+          - name: "release-manager-approval"
+            type: manual
+            approver_contains: "release-mgr"
+    runs:
+      - workflow: "production-deploy-approval"
+        status: pending
+        context_contains: "2.3.1"
+    command_history:
+      - pattern: "flowctl workflow create.*production-deploy-approval"
+      - pattern: "flowctl workflow add-step"
+      - pattern: "flowctl run trigger.*production-deploy-approval"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 12
+optimal_commands: 6
+timeout_seconds: 90

@@ -1,0 +1,134 @@
+name: jira-cli
+description: Jira CLI for managing issues, projects, and search in Atlassian Jira
+binary: jira
+auth:
+  type: token
+  key: JIRA_API_TOKEN
+commands:
+  - name: issue list
+    description: List issues in a project with optional filtering
+    args:
+      - name: project
+        type: string
+        required: true
+        description: Project key (e.g. PROJ)
+      - name: status
+        type: enum
+        required: false
+        description: Filter by issue status
+        values: ["To Do", "In Progress", "In Review", "Done"]
+      - name: assignee
+        type: string
+        required: false
+        description: Filter by assignee username
+      - name: type
+        type: enum
+        required: false
+        description: Filter by issue type
+        values: ["Bug", "Story", "Task", "Epic", "Sub-task"]
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of issues to return
+    output_format: json
+    side_effects: false
+    example: "jira issue list --project PROJ --status 'In Progress' --assignee alice"
+
+  - name: issue create
+    description: Create a new issue in a project
+    args:
+      - name: project
+        type: string
+        required: true
+        description: Project key
+      - name: title
+        type: string
+        required: true
+        description: Issue summary/title
+      - name: type
+        type: enum
+        required: true
+        description: Issue type
+        values: ["Bug", "Story", "Task", "Epic", "Sub-task"]
+      - name: description
+        type: string
+        required: false
+        description: Issue description
+      - name: assignee
+        type: string
+        required: false
+        description: Username to assign
+      - name: priority
+        type: enum
+        required: false
+        description: Issue priority
+        values: ["Highest", "High", "Medium", "Low", "Lowest"]
+      - name: labels
+        type: string
+        required: false
+        description: Comma-separated labels
+    output_format: json
+    side_effects: true
+    example: "jira issue create --project PROJ --title 'Fix login' --type Bug --priority High"
+
+  - name: issue update
+    description: Update fields on an existing issue
+    args:
+      - name: key
+        type: string
+        required: true
+        description: Issue key (e.g. PROJ-42)
+      - name: status
+        type: enum
+        required: false
+        description: Transition to new status
+        values: ["To Do", "In Progress", "In Review", "Done"]
+      - name: assignee
+        type: string
+        required: false
+        description: New assignee username
+      - name: priority
+        type: enum
+        required: false
+        description: New priority
+        values: ["Highest", "High", "Medium", "Low", "Lowest"]
+      - name: title
+        type: string
+        required: false
+        description: New summary/title
+    output_format: json
+    side_effects: true
+    example: "jira issue update --key PROJ-42 --status 'In Progress' --assignee bob"
+
+  - name: issue view
+    description: View a single issue by key
+    args:
+      - name: key
+        type: string
+        required: true
+        description: Issue key (e.g. PROJ-42)
+    output_format: json
+    side_effects: false
+    example: "jira issue view --key PROJ-42"
+
+  - name: project list
+    description: List all projects accessible to the current user
+    args: []
+    output_format: json
+    side_effects: false
+    example: "jira project list"
+
+  - name: search
+    description: Search issues using JQL query
+    args:
+      - name: jql
+        type: string
+        required: true
+        description: JQL query string
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of results
+    output_format: json
+    side_effects: false
+    example: "jira search --jql 'project = PROJ AND status = \"In Progress\"' --limit 50"

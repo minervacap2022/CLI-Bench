@@ -1,0 +1,52 @@
+id: cb-018
+title: "List Google Calendar events for today"
+difficulty: easy
+category: data_ops
+description: |
+  List all events on the primary Google Calendar for today (2026-03-12).
+  Show the event title, start time, end time, and attendees.
+tools_provided:
+  - google
+initial_state:
+  google:
+    calendar:
+      events:
+        - id: evt-001
+          title: "Daily Standup"
+          start: "2026-03-12T09:00:00Z"
+          end: "2026-03-12T09:15:00Z"
+          attendees: ["alice@acme.com", "bob@acme.com", "sarah@acme.com"]
+          calendar: primary
+        - id: evt-002
+          title: "Sprint Planning"
+          start: "2026-03-12T14:00:00Z"
+          end: "2026-03-12T15:00:00Z"
+          attendees: ["alice@acme.com", "sarah@acme.com", "mark@acme.com"]
+          calendar: primary
+        - id: evt-003
+          title: "1:1 with Manager"
+          start: "2026-03-12T16:00:00Z"
+          end: "2026-03-12T16:30:00Z"
+          attendees: ["alice@acme.com", "vp-eng@acme.com"]
+          calendar: primary
+        - id: evt-004
+          title: "Architecture Review"
+          start: "2026-03-13T10:00:00Z"
+          end: "2026-03-13T11:00:00Z"
+          attendees: ["alice@acme.com", "bob@acme.com"]
+          calendar: primary
+expected_state:
+  google:
+    command_history:
+      - pattern: "google calendar list.*--date.*2026-03-12"
+    output_contains:
+      - "Daily Standup"
+      - "Sprint Planning"
+      - "1:1 with Manager"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

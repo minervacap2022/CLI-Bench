@@ -1,0 +1,57 @@
+id: cb-015
+title: "List Jira issues in a project"
+difficulty: easy
+category: project_mgmt
+description: |
+  List all issues in the Jira project "INFRA" (Infrastructure). Show the issue
+  key, summary, status, assignee, and priority for each issue.
+tools_provided:
+  - jira
+initial_state:
+  jira:
+    projects:
+      - key: INFRA
+        name: "Infrastructure"
+        issues:
+          - key: INFRA-201
+            summary: "Upgrade Kubernetes to 1.29"
+            status: "In Progress"
+            assignee: ops-alice
+            priority: High
+          - key: INFRA-202
+            summary: "Set up Prometheus alerting rules"
+            status: "To Do"
+            assignee: ops-bob
+            priority: Medium
+          - key: INFRA-203
+            summary: "Migrate RDS from db.m5 to db.m6i"
+            status: "To Do"
+            assignee: null
+            priority: High
+          - key: INFRA-204
+            summary: "Configure CloudFront cache invalidation"
+            status: "Done"
+            assignee: ops-alice
+            priority: Low
+          - key: INFRA-205
+            summary: "Implement VPC peering for staging"
+            status: "In Progress"
+            assignee: ops-carol
+            priority: Medium
+expected_state:
+  jira:
+    command_history:
+      - pattern: "jira issue list.*--project.*INFRA"
+    output_contains:
+      - "INFRA-201"
+      - "INFRA-202"
+      - "INFRA-203"
+      - "INFRA-204"
+      - "INFRA-205"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

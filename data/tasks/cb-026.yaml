@@ -1,0 +1,77 @@
+id: cb-026
+title: "Find Jira issues blocked for more than 3 days and notify on Slack"
+difficulty: medium
+category: composite
+description: |
+  Search the Jira project "INFRA" for issues with status "Blocked" that have
+  been in that status for more than 3 days. For each blocked issue, post a
+  notification to the #incidents Slack channel with the issue key, summary,
+  assignee, and how long it has been blocked.
+tools_provided:
+  - jira
+  - slack
+initial_state:
+  jira:
+    projects:
+      - key: INFRA
+        name: "Infrastructure"
+        issues:
+          - key: INFRA-301
+            summary: "Upgrade load balancer firmware"
+            status: "Blocked"
+            status_changed: "2026-03-07T10:00:00Z"
+            assignee: ops-alice
+            priority: High
+            blocker_reason: "Waiting for vendor approval"
+          - key: INFRA-302
+            summary: "Deploy new monitoring agent"
+            status: "Blocked"
+            status_changed: "2026-03-11T14:00:00Z"
+            assignee: ops-bob
+            priority: Medium
+            blocker_reason: "Dependency on INFRA-301"
+          - key: INFRA-303
+            summary: "Rotate SSL certificates"
+            status: "Blocked"
+            status_changed: "2026-03-05T09:00:00Z"
+            assignee: ops-carol
+            priority: Critical
+            blocker_reason: "Certificate authority outage"
+          - key: INFRA-304
+            summary: "Set up backup replication"
+            status: "In Progress"
+            assignee: ops-alice
+            priority: High
+          - key: INFRA-305
+            summary: "Network segmentation review"
+            status: "Blocked"
+            status_changed: "2026-03-10T08:00:00Z"
+            assignee: null
+            priority: Medium
+            blocker_reason: "Pending security team review"
+  slack:
+    channels:
+      - id: C005
+        name: incidents
+        is_private: false
+        num_members: 15
+        messages: []
+expected_state:
+  jira:
+    command_history:
+      - pattern: "jira issue list.*--project.*INFRA.*--status.*Blocked"
+  slack:
+    channels:
+      - name: incidents
+        messages:
+          - text_contains: "INFRA-301"
+          - text_contains: "INFRA-303"
+    command_history:
+      - pattern: "slack message send.*--channel.*incidents"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 8
+optimal_commands: 3
+timeout_seconds: 60

@@ -1,0 +1,77 @@
+id: cb-030
+title: "Create Notion doc listing all Slack channel topics"
+difficulty: medium
+category: composite
+description: |
+  List all public Slack channels in the workspace and collect their names,
+  topics, and member counts. Create a Notion page under "Company Resources"
+  titled "Slack Channel Directory" that organizes all channels into a
+  structured document with descriptions and member counts.
+tools_provided:
+  - slack
+  - notion
+initial_state:
+  slack:
+    channels:
+      - id: C001
+        name: general
+        is_private: false
+        num_members: 45
+        topic: "Company-wide announcements and updates"
+      - id: C002
+        name: engineering
+        is_private: false
+        num_members: 22
+        topic: "Engineering discussions, code reviews, technical decisions"
+      - id: C003
+        name: design-team
+        is_private: true
+        num_members: 8
+        topic: "Design reviews and feedback"
+      - id: C004
+        name: random
+        is_private: false
+        num_members: 40
+        topic: "Non-work banter, memes, and fun"
+      - id: C005
+        name: incidents
+        is_private: false
+        num_members: 15
+        topic: "Production incident coordination and post-mortems"
+      - id: C006
+        name: hiring
+        is_private: false
+        num_members: 12
+        topic: "Hiring pipeline updates and interview feedback"
+      - id: C007
+        name: product
+        is_private: false
+        num_members: 18
+        topic: "Product roadmap, feature requests, user feedback"
+  notion:
+    pages:
+      - id: pg-010
+        title: "Company Handbook"
+        parent: "Company Resources"
+    databases:
+      - id: db-002
+        title: "Company Resources"
+expected_state:
+  slack:
+    command_history:
+      - pattern: "slack channel list"
+  notion:
+    pages:
+      - title: "Slack Channel Directory"
+        parent: "Company Resources"
+        content_contains: "engineering"
+        content_contains_2: "incidents"
+    command_history:
+      - pattern: "notion page create.*--title.*Slack Channel Directory"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 8
+optimal_commands: 3
+timeout_seconds: 60

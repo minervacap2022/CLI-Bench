@@ -1,0 +1,73 @@
+id: cb-038
+title: "(datapipe) Build ETL: connect source, create transform, set up sink, schedule"
+difficulty: hard
+category: custom_cli
+description: |
+  Using the datapipe CLI, build an ETL pipeline that extracts user activity
+  data from a PostgreSQL source, transforms it to compute daily active user
+  metrics, and loads the results into an Elasticsearch sink. Create a source
+  connection to the PostgreSQL database "analytics_db" on host
+  "db.internal:5432". Create a transform step that aggregates user events
+  by day and computes unique user counts. Create a sink connection to
+  Elasticsearch cluster "es.internal:9200" targeting the index
+  "user_metrics". Wire these into a pipeline called "daily-dau-pipeline"
+  and schedule it to run daily at 02:00 UTC.
+tools_provided:
+  - datapipe
+initial_state:
+  datapipe:
+    sources: []
+    transforms: []
+    sinks: []
+    pipelines:
+      - id: pipe-001
+        name: "hourly-logs-pipeline"
+        status: active
+        schedule: "0 * * * *"
+        source: src-010
+        transform: tx-010
+        sink: sink-010
+    connections:
+      - id: src-010
+        type: source
+        connector: s3
+        config:
+          bucket: raw-logs
+      - id: sink-010
+        type: sink
+        connector: elasticsearch
+        config:
+          host: "es.internal:9200"
+          index: raw_logs
+expected_state:
+  datapipe:
+    sources:
+      - connector: postgresql
+        config_contains:
+          host: "db.internal:5432"
+          database: analytics_db
+    transforms:
+      - type: aggregation
+        config_contains: "unique"
+    sinks:
+      - connector: elasticsearch
+        config_contains:
+          host: "es.internal:9200"
+          index: user_metrics
+    pipelines:
+      - name: "daily-dau-pipeline"
+        schedule: "0 2 * * *"
+        status: active
+    command_history:
+      - pattern: "datapipe source create.*--connector.*postgresql"
+      - pattern: "datapipe transform create"
+      - pattern: "datapipe sink create.*--connector.*elasticsearch"
+      - pattern: "datapipe pipeline create.*daily-dau-pipeline"
+      - pattern: "datapipe pipeline schedule"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 15
+optimal_commands: 7
+timeout_seconds: 120

@@ -1,0 +1,52 @@
+id: cb-019
+title: "List files in Google Drive"
+difficulty: easy
+category: data_ops
+description: |
+  List all files in the Google Drive folder "Engineering/Architecture".
+  Show the file name, size, last modified date, and owner.
+tools_provided:
+  - google
+initial_state:
+  google:
+    drive:
+      folders:
+        - path: "Engineering/Architecture"
+          files:
+            - name: "System Design v2.pdf"
+              size: "4.2 MB"
+              modified: "2026-03-01T10:00:00Z"
+              owner: "alice@acme.com"
+            - name: "Database Schema.drawio"
+              size: "128 KB"
+              modified: "2026-02-28T14:00:00Z"
+              owner: "bob@acme.com"
+            - name: "API Spec OpenAPI.yaml"
+              size: "56 KB"
+              modified: "2026-03-10T16:00:00Z"
+              owner: "sarah@acme.com"
+            - name: "Infrastructure Diagram.png"
+              size: "2.1 MB"
+              modified: "2026-02-15T09:00:00Z"
+              owner: "ops-alice@acme.com"
+            - name: "Migration Plan Q1.docx"
+              size: "320 KB"
+              modified: "2026-03-05T11:00:00Z"
+              owner: "mark@acme.com"
+expected_state:
+  google:
+    command_history:
+      - pattern: "google drive list.*Engineering/Architecture"
+    output_contains:
+      - "System Design v2.pdf"
+      - "Database Schema.drawio"
+      - "API Spec OpenAPI.yaml"
+      - "Infrastructure Diagram.png"
+      - "Migration Plan Q1.docx"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

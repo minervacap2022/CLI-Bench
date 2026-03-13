@@ -1,0 +1,39 @@
+id: cb-004
+title: "Send a message to a Slack channel"
+difficulty: easy
+category: communication
+description: |
+  Send the message "Deployment v2.3.1 completed successfully. All health checks passing."
+  to the #engineering channel in Slack.
+tools_provided:
+  - slack
+initial_state:
+  slack:
+    channels:
+      - id: C002
+        name: engineering
+        is_private: false
+        num_members: 22
+        topic: "Engineering discussions"
+        messages: []
+      - id: C001
+        name: general
+        is_private: false
+        num_members: 45
+        topic: "Company-wide announcements"
+        messages: []
+expected_state:
+  slack:
+    channels:
+      - name: engineering
+        messages:
+          - text_contains: "Deployment v2.3.1 completed successfully"
+    command_history:
+      - pattern: "slack message send.*--channel.*engineering"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

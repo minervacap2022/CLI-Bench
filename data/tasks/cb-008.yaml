@@ -1,0 +1,42 @@
+id: cb-008
+title: "View a specific GitHub issue by number"
+difficulty: easy
+category: project_mgmt
+description: |
+  View the full details of issue #42 in the repository "acme-corp/web-platform",
+  including its title, body, labels, assignee, and comments.
+tools_provided:
+  - gh
+initial_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        issues:
+          - number: 42
+            title: "Fix login redirect loop"
+            state: open
+            assignee: alice
+            labels: ["bug", "auth"]
+            body: |
+              Users are experiencing an infinite redirect loop when logging in
+              with SSO. The issue occurs after the OAuth callback redirects back
+              to the application. Browser console shows ERR_TOO_MANY_REDIRECTS.
+            comments:
+              - user: bob
+                body: "I can reproduce this on Chrome 120 with SSO provider Okta."
+              - user: alice
+                body: "Found the root cause — the session cookie domain is misconfigured."
+expected_state:
+  gh:
+    command_history:
+      - pattern: "gh issue view 42.*--repo acme-corp/web-platform"
+    output_contains:
+      - "Fix login redirect loop"
+      - "redirect"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

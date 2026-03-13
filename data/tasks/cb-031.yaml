@@ -1,0 +1,127 @@
+id: cb-031
+title: "Incident response: find broken commit, create issue, assign on-call, notify Slack"
+difficulty: hard
+category: composite
+description: |
+  A production incident has been reported. Investigate the GitHub repository
+  "acme-corp/web-platform" to find the most recent merged PR that touched
+  files in the "src/auth/" directory. Create a GitHub issue documenting the
+  incident and link it to that PR. Then find the on-call engineer from the
+  Linear team "Platform" (the one with the "oncall" label on their current
+  issue) and assign the GitHub issue to them. Finally, post an incident
+  notification to the #incidents Slack channel with the issue link, suspected
+  PR, and assigned engineer.
+tools_provided:
+  - gh
+  - linear
+  - slack
+initial_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        pull_requests:
+          - number: 180
+            title: "feat: Add session refresh logic"
+            state: closed
+            merged: true
+            merged_at: "2026-03-12T06:00:00Z"
+            author: dave
+            files_changed: ["src/auth/session.ts", "src/auth/refresh.ts"]
+          - number: 179
+            title: "fix: Update user avatar upload"
+            state: closed
+            merged: true
+            merged_at: "2026-03-11T15:00:00Z"
+            author: carol
+            files_changed: ["src/profile/avatar.ts"]
+          - number: 178
+            title: "chore: Bump auth library version"
+            state: closed
+            merged: true
+            merged_at: "2026-03-11T10:00:00Z"
+            author: bob
+            files_changed: ["package.json", "src/auth/config.ts"]
+          - number: 181
+            title: "docs: Update API reference"
+            state: open
+            author: alice
+            files_changed: ["docs/api.md"]
+        issues:
+          - number: 90
+            title: "Existing tracking issue"
+            state: open
+            labels: ["tracking"]
+  linear:
+    teams:
+      - name: Platform
+        key: ACM
+        members:
+          - sarah@acme.com
+          - mark@acme.com
+          - dave@acme.com
+          - bob@acme.com
+    issues:
+      - id: ACM-600
+        title: "On-call rotation week 11"
+        status: in_progress
+        priority: medium
+        assignee: mark@acme.com
+        team: Platform
+        labels: ["oncall"]
+      - id: ACM-601
+        title: "Refactor error handling"
+        status: todo
+        priority: low
+        assignee: sarah@acme.com
+        team: Platform
+        labels: []
+      - id: ACM-602
+        title: "Performance optimization"
+        status: in_progress
+        priority: medium
+        assignee: dave@acme.com
+        team: Platform
+        labels: []
+  slack:
+    channels:
+      - id: C005
+        name: incidents
+        is_private: false
+        num_members: 15
+        messages: []
+      - id: C002
+        name: engineering
+        is_private: false
+        num_members: 22
+        messages: []
+expected_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        issues:
+          - title_contains: "incident"
+            state: open
+            assignee: mark
+            body_contains: "180"
+    command_history:
+      - pattern: "gh pr list.*--state.*merged"
+      - pattern: "gh issue create.*--repo acme-corp/web-platform"
+  linear:
+    command_history:
+      - pattern: "linear issue list.*--team.*Platform.*--label.*oncall"
+  slack:
+    channels:
+      - name: incidents
+        messages:
+          - text_contains: "incident"
+          - text_contains: "mark"
+          - text_contains: "180"
+    command_history:
+      - pattern: "slack message send.*--channel.*incidents"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 15
+optimal_commands: 7
+timeout_seconds: 120

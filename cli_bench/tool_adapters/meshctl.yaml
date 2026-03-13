@@ -1,0 +1,140 @@
+name: meshctl
+description: Service mesh configuration manager for routing, traffic policies, and observability across microservices
+binary: meshctl
+auth:
+  type: env_var
+  key: MESHCTL_TOKEN
+commands:
+  - name: service list
+    description: List all registered services with health status
+    args:
+      - name: namespace
+        type: string
+        required: false
+        description: Filter by namespace
+      - name: status
+        type: enum
+        required: false
+        description: Filter by health status
+        values: ["healthy", "degraded", "unhealthy"]
+    output_format: json
+    side_effects: false
+    example: "meshctl service list --namespace production --status healthy"
+
+  - name: service route
+    description: Create or update a routing rule between two services
+    args:
+      - name: from
+        type: string
+        required: true
+        description: Source service name
+      - name: to
+        type: string
+        required: true
+        description: Destination service name
+      - name: weight
+        type: int
+        required: true
+        description: Traffic weight percentage (0-100)
+      - name: match-headers
+        type: json
+        required: false
+        description: Header matching rules as JSON object
+    output_format: json
+    side_effects: true
+    example: "meshctl service route --from api-gateway --to user-service --weight 80"
+
+  - name: policy create
+    description: Create a traffic policy (rate limit, circuit breaker, or retry)
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Policy name (unique identifier)
+      - name: type
+        type: enum
+        required: true
+        description: Policy type
+        values: ["rate_limit", "circuit_breaker", "retry"]
+      - name: config
+        type: json
+        required: true
+        description: "Policy configuration as JSON (e.g. {\"max_requests\": 100, \"window_seconds\": 60})"
+    output_format: json
+    side_effects: true
+    example: "meshctl policy create --name api-rate-limit --type rate_limit --config '{\"max_requests\": 1000, \"window_seconds\": 60}'"
+
+  - name: policy apply
+    description: Apply an existing policy to a service
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Policy name to apply
+      - name: service
+        type: string
+        required: true
+        description: Target service name
+    output_format: json
+    side_effects: true
+    example: "meshctl policy apply --name api-rate-limit --service user-service"
+
+  - name: traffic split
+    description: Configure traffic splitting across service versions for canary or blue-green deployments
+    args:
+      - name: service
+        type: string
+        required: true
+        description: Service name to split traffic for
+      - name: versions
+        type: json
+        required: true
+        description: "Version-to-weight mapping as JSON (e.g. {\"v1\": 90, \"v2\": 10})"
+    output_format: json
+    side_effects: true
+    example: "meshctl traffic split --service user-service --versions '{\"v1\": 90, \"v2\": 10}'"
+
+  - name: observe metrics
+    description: Get real-time traffic metrics for a service
+    args:
+      - name: service
+        type: string
+        required: true
+        description: Service name to observe
+      - name: window
+        type: enum
+        required: false
+        description: Time window for metrics aggregation
+        values: ["5m", "15m", "1h", "6h", "24h"]
+      - name: metric
+        type: enum
+        required: false
+        description: Specific metric to query
+        values: ["latency", "throughput", "error_rate", "saturation"]
+    output_format: json
+    side_effects: false
+    example: "meshctl observe metrics --service user-service --window 15m --metric latency"
+
+  - name: service register
+    description: Register a new service in the mesh
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Service name
+      - name: namespace
+        type: string
+        required: true
+        description: Namespace to register in
+      - name: port
+        type: int
+        required: true
+        description: Service port number
+      - name: protocol
+        type: enum
+        required: false
+        description: Communication protocol
+        values: ["http", "grpc", "tcp"]
+    output_format: json
+    side_effects: true
+    example: "meshctl service register --name payment-svc --namespace production --port 8080 --protocol grpc"

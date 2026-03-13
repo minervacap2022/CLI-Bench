@@ -1,0 +1,78 @@
+id: cb-025
+title: "Create Notion summary from Linear project status"
+difficulty: medium
+category: composite
+description: |
+  Retrieve the status of the Linear project "Q1 Platform Migration" including
+  all its issues and their current states. Create a Notion page under
+  "Engineering Wiki" titled "Q1 Platform Migration - Status Report" that
+  summarizes the project progress: total issues, completed vs in-progress vs
+  todo counts, and lists any blocked items.
+tools_provided:
+  - linear
+  - notion
+initial_state:
+  linear:
+    projects:
+      - name: "Q1 Platform Migration"
+        status: in_progress
+        lead: sarah@acme.com
+        target_date: "2026-03-31"
+        teams: ["Platform"]
+    issues:
+      - id: ACM-401
+        title: "Migrate user service to gRPC"
+        status: done
+        priority: high
+        project: "Q1 Platform Migration"
+        team: Platform
+      - id: ACM-402
+        title: "Update API gateway routing"
+        status: in_progress
+        priority: high
+        project: "Q1 Platform Migration"
+        team: Platform
+      - id: ACM-403
+        title: "Database schema migration"
+        status: done
+        priority: urgent
+        project: "Q1 Platform Migration"
+        team: Platform
+      - id: ACM-404
+        title: "Update client SDKs"
+        status: todo
+        priority: medium
+        project: "Q1 Platform Migration"
+        team: Platform
+      - id: ACM-405
+        title: "Load testing new endpoints"
+        status: blocked
+        priority: high
+        project: "Q1 Platform Migration"
+        team: Platform
+  notion:
+    pages:
+      - id: pg-001
+        title: "Engineering Runbook"
+        parent: "Engineering Wiki"
+    databases:
+      - id: db-001
+        title: "Engineering Wiki"
+expected_state:
+  linear:
+    command_history:
+      - pattern: "linear issue list.*--project.*Q1 Platform Migration"
+  notion:
+    pages:
+      - title: "Q1 Platform Migration - Status Report"
+        parent: "Engineering Wiki"
+        content_contains: "blocked"
+    command_history:
+      - pattern: "notion page create.*--title.*Q1 Platform Migration.*Status Report"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 8
+optimal_commands: 3
+timeout_seconds: 60

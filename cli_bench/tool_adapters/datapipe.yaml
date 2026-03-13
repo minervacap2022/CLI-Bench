@@ -1,0 +1,138 @@
+name: datapipe
+description: Data pipeline orchestrator for connecting sources, applying transformations, and routing to sinks on configurable schedules
+binary: datapipe
+auth:
+  type: env_var
+  key: DATAPIPE_API_KEY
+commands:
+  - name: source list
+    description: List all configured data sources
+    args:
+      - name: type
+        type: enum
+        required: false
+        description: Filter by source type
+        values: ["postgres", "mysql", "s3", "api", "kafka", "mongodb"]
+    output_format: json
+    side_effects: false
+    example: "datapipe source list --type postgres"
+
+  - name: source connect
+    description: Register a new data source connection
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Source name (unique identifier)
+      - name: type
+        type: enum
+        required: true
+        description: Source type
+        values: ["postgres", "mysql", "s3", "api", "kafka", "mongodb"]
+      - name: config
+        type: json
+        required: true
+        description: "Connection configuration as JSON (e.g. {\"host\": \"db.example.com\", \"port\": 5432, \"database\": \"analytics\"})"
+    output_format: json
+    side_effects: true
+    example: "datapipe source connect --name prod-db --type postgres --config '{\"host\": \"db.example.com\", \"port\": 5432, \"database\": \"analytics\"}'"
+
+  - name: transform create
+    description: Create a named transformation step with SQL logic
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Transform name (unique identifier)
+      - name: sql
+        type: string
+        required: true
+        description: SQL transformation query
+      - name: source
+        type: string
+        required: true
+        description: Source name to read data from
+      - name: description
+        type: string
+        required: false
+        description: Human-readable description of the transformation
+    output_format: json
+    side_effects: true
+    example: "datapipe transform create --name daily-revenue --sql 'SELECT date, SUM(amount) as revenue FROM orders GROUP BY date' --source prod-db"
+
+  - name: transform run
+    description: Execute a transformation step
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Transform name to execute
+      - name: dry-run
+        type: bool
+        required: false
+        description: Preview the output without writing results
+      - name: limit
+        type: int
+        required: false
+        description: Limit output rows (useful for preview)
+    output_format: json
+    side_effects: true
+    example: "datapipe transform run --name daily-revenue --dry-run --limit 10"
+
+  - name: sink create
+    description: Create a data sink destination
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Sink name (unique identifier)
+      - name: type
+        type: enum
+        required: true
+        description: Sink type
+        values: ["s3", "bigquery", "warehouse", "postgres", "elasticsearch"]
+      - name: config
+        type: json
+        required: true
+        description: "Sink configuration as JSON (e.g. {\"bucket\": \"analytics-output\", \"prefix\": \"daily/\"})"
+    output_format: json
+    side_effects: true
+    example: "datapipe sink create --name analytics-lake --type s3 --config '{\"bucket\": \"analytics-output\", \"prefix\": \"daily/\"}'"
+
+  - name: pipeline create
+    description: Create a complete data pipeline connecting source, transforms, and sink with a schedule
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Pipeline name (unique identifier)
+      - name: source
+        type: string
+        required: true
+        description: Source name
+      - name: transforms
+        type: string
+        required: true
+        description: Comma-separated list of transform names in execution order
+      - name: sink
+        type: string
+        required: true
+        description: Sink name
+      - name: schedule
+        type: string
+        required: true
+        description: Cron expression for scheduled execution
+    output_format: json
+    side_effects: true
+    example: "datapipe pipeline create --name daily-etl --source prod-db --transforms daily-revenue,add-dimensions --sink analytics-lake --schedule '0 2 * * *'"
+
+  - name: pipeline status
+    description: Check the status and execution history of a pipeline
+    args:
+      - name: name
+        type: string
+        required: true
+        description: Pipeline name
+    output_format: json
+    side_effects: false
+    example: "datapipe pipeline status --name daily-etl"

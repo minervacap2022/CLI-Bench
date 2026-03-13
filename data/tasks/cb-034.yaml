@@ -1,0 +1,125 @@
+id: cb-034
+title: "Bug triage: GitHub issues to Linear issues, assign by labels, notify Slack"
+difficulty: hard
+category: composite
+description: |
+  Perform a full bug triage workflow. Find all open GitHub issues in
+  "acme-corp/web-platform" with the "bug" label that don't have a
+  "linear:" label yet. For each bug, create a Linear issue in the
+  appropriate team based on GitHub labels ("auth" -> Security team,
+  "api" -> Platform team, "ui" -> Frontend team, default -> Platform).
+  Set priority based on other labels ("priority:critical" -> urgent,
+  "priority:high" -> high, otherwise medium). Add a "linear:ACM-XXX"
+  label back to each GitHub issue. Finally, post a triage summary to
+  #engineering on Slack listing all newly created Linear issues.
+tools_provided:
+  - gh
+  - linear
+  - slack
+initial_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        issues:
+          - number: 100
+            title: "XSS vulnerability in search input"
+            state: open
+            labels: ["bug", "auth", "priority:critical"]
+            assignee: null
+          - number: 101
+            title: "REST API returns 500 on empty payload"
+            state: open
+            labels: ["bug", "api", "priority:high"]
+            assignee: null
+          - number: 102
+            title: "Button misalignment on mobile"
+            state: open
+            labels: ["bug", "ui"]
+            assignee: null
+          - number: 103
+            title: "Race condition in job queue"
+            state: open
+            labels: ["bug", "priority:high"]
+            assignee: null
+          - number: 104
+            title: "Implement dark mode"
+            state: open
+            labels: ["enhancement", "ui"]
+            assignee: carol
+          - number: 105
+            title: "Token refresh bug [linear:ACM-501]"
+            state: open
+            labels: ["bug", "auth", "linear:ACM-501"]
+            assignee: alice
+  linear:
+    teams:
+      - name: Platform
+        key: ACM
+        members: ["sarah@acme.com", "mark@acme.com"]
+      - name: Security
+        key: SEC
+        members: ["alice@acme.com", "bob@acme.com"]
+      - name: Frontend
+        key: FE
+        members: ["carol@acme.com", "dave@acme.com"]
+    issues:
+      - id: ACM-501
+        title: "Token refresh bug"
+        status: in_progress
+        priority: high
+        team: Security
+  slack:
+    channels:
+      - id: C002
+        name: engineering
+        is_private: false
+        num_members: 22
+        messages: []
+expected_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        issues:
+          - number: 100
+            labels_contain: "linear:"
+          - number: 101
+            labels_contain: "linear:"
+          - number: 102
+            labels_contain: "linear:"
+          - number: 103
+            labels_contain: "linear:"
+    command_history:
+      - pattern: "gh issue list.*--label.*bug"
+      - pattern: "gh issue edit.*--add-label.*linear:"
+  linear:
+    issues:
+      - title_contains: "XSS vulnerability"
+        team: Security
+        priority: urgent
+      - title_contains: "REST API returns 500"
+        team: Platform
+        priority: high
+      - title_contains: "Button misalignment"
+        team: Frontend
+        priority: medium
+      - title_contains: "Race condition"
+        team: Platform
+        priority: high
+    command_history:
+      - pattern: "linear issue create"
+  slack:
+    channels:
+      - name: engineering
+        messages:
+          - text_contains: "triage"
+          - text_contains: "XSS"
+          - text_contains: "REST API"
+    command_history:
+      - pattern: "slack message send.*--channel.*engineering"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 18
+optimal_commands: 12
+timeout_seconds: 180

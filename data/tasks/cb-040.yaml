@@ -1,0 +1,120 @@
+id: cb-040
+title: "(kforge + flowctl + slack) Full deployment: promote artifact, create approval gate, notify"
+difficulty: hard
+category: composite
+description: |
+  Execute a full production deployment workflow using multiple tools.
+  First, use kforge to find the latest successful artifact for "web-platform"
+  that is currently deployed in staging. Verify the staging deployment is
+  healthy. Then use flowctl to create and trigger a "prod-release" approval
+  workflow with steps: automated security scan, manual QA approval, and
+  manual release manager approval. Use kforge to promote the staging artifact
+  to the production environment once the workflow is approved (simulate
+  approval). Finally, post deployment notifications to both #engineering
+  and #incidents Slack channels with the artifact version, deployment status,
+  and a link to the approval workflow run.
+tools_provided:
+  - kforge
+  - flowctl
+  - slack
+initial_state:
+  kforge:
+    artifacts:
+      - id: art-080
+        service: web-platform
+        version: "3.0.0-rc1"
+        build_status: success
+        created_at: "2026-03-12T06:00:00Z"
+        sha: "abc123f"
+      - id: art-079
+        service: web-platform
+        version: "2.9.5"
+        build_status: success
+        created_at: "2026-03-10T14:00:00Z"
+        sha: "def456a"
+      - id: art-078
+        service: api-gateway
+        version: "1.6.0"
+        build_status: success
+        created_at: "2026-03-11T08:00:00Z"
+        sha: "ghi789b"
+    deployments:
+      staging:
+        web-platform:
+          current_version: "3.0.0-rc1"
+          artifact_id: art-080
+          deployed_at: "2026-03-12T07:00:00Z"
+          status: healthy
+      production:
+        web-platform:
+          current_version: "2.9.5"
+          artifact_id: art-079
+          deployed_at: "2026-03-10T15:00:00Z"
+          status: healthy
+    pipelines: []
+  flowctl:
+    workflows:
+      - id: wf-010
+        name: "staging-deploy"
+        status: active
+    runs: []
+    users:
+      - email: qa-lead@acme.com
+        role: qa_lead
+      - email: release-mgr@acme.com
+        role: release_manager
+  slack:
+    channels:
+      - id: C002
+        name: engineering
+        is_private: false
+        num_members: 22
+        messages: []
+      - id: C005
+        name: incidents
+        is_private: false
+        num_members: 15
+        messages: []
+expected_state:
+  kforge:
+    deployments:
+      production:
+        web-platform:
+          current_version: "3.0.0-rc1"
+          artifact_id: art-080
+    command_history:
+      - pattern: "kforge artifact list.*--service.*web-platform"
+      - pattern: "kforge deploy status.*--env.*staging"
+      - pattern: "kforge deploy trigger.*--env.*production.*--artifact.*art-080"
+  flowctl:
+    workflows:
+      - name: "prod-release"
+        steps:
+          - type: automated
+          - type: manual
+          - type: manual
+    runs:
+      - workflow: "prod-release"
+        status: approved
+    command_history:
+      - pattern: "flowctl workflow create.*prod-release"
+      - pattern: "flowctl run trigger.*prod-release"
+  slack:
+    channels:
+      - name: engineering
+        messages:
+          - text_contains: "3.0.0-rc1"
+          - text_contains: "production"
+      - name: incidents
+        messages:
+          - text_contains: "deployment"
+    command_history:
+      - pattern: "slack message send.*--channel.*engineering"
+      - pattern: "slack message send.*--channel.*incidents"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 20
+optimal_commands: 12
+timeout_seconds: 180

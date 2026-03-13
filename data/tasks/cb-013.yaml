@@ -1,0 +1,54 @@
+id: cb-013
+title: "List Notion pages"
+difficulty: easy
+category: data_ops
+description: |
+  List all pages in the Notion workspace. Show the page title, last edited time,
+  and parent database or page for each entry.
+tools_provided:
+  - notion
+initial_state:
+  notion:
+    pages:
+      - id: pg-001
+        title: "Engineering Runbook"
+        last_edited: "2026-03-10T16:00:00Z"
+        parent: "Engineering Wiki"
+        created_by: alice
+      - id: pg-002
+        title: "Q1 OKRs"
+        last_edited: "2026-03-08T10:00:00Z"
+        parent: "Company Goals"
+        created_by: ceo
+      - id: pg-003
+        title: "Onboarding Checklist"
+        last_edited: "2026-02-20T14:00:00Z"
+        parent: "HR"
+        created_by: carol
+      - id: pg-004
+        title: "Incident Post-Mortem Template"
+        last_edited: "2026-03-11T09:00:00Z"
+        parent: "Engineering Wiki"
+        created_by: bob
+      - id: pg-005
+        title: "API Design Guidelines"
+        last_edited: "2026-03-05T11:00:00Z"
+        parent: "Engineering Wiki"
+        created_by: sarah
+expected_state:
+  notion:
+    command_history:
+      - pattern: "notion page list"
+    output_contains:
+      - "Engineering Runbook"
+      - "Q1 OKRs"
+      - "Onboarding Checklist"
+      - "Incident Post-Mortem Template"
+      - "API Design Guidelines"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30
