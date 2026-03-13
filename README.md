@@ -2,7 +2,7 @@
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97-Dataset-yellow)](https://huggingface.co/spaces/minervacap2022/CLI-Bench)
+[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97-Dataset-yellow)](https://huggingface.co/datasets/ChengyiX/CLI-Bench)
 [![arXiv](https://img.shields.io/badge/arXiv-coming%20soon-b31b1b.svg)]()
 
 ## Abstract
@@ -169,7 +169,7 @@ Create task YAMLs in `data/tasks/` following the `BenchTask` schema (see existin
 
 Results and model comparisons are hosted on HuggingFace Spaces:
 
-**[https://huggingface.co/spaces/minervacap2022/CLI-Bench](https://huggingface.co/spaces/minervacap2022/CLI-Bench)**
+**[https://huggingface.co/datasets/ChengyiX/CLI-Bench](https://huggingface.co/datasets/ChengyiX/CLI-Bench)**
 
 ## Citation
 

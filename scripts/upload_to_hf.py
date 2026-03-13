@@ -55,7 +55,7 @@ def main():
     parser.add_argument(
         "--org",
         type=str,
-        default="minervacap2022",
+        default="ChengyiX",
         help="HF organization",
     )
     parser.add_argument(
