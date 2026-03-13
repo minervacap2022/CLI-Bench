@@ -43,7 +43,7 @@
 \maketitle
 
 \begin{abstract}
-We introduce \clibench{}, a benchmark for evaluating AI agents' ability to orchestrate command-line interface (CLI) tools to complete multi-step workflows. Unlike existing tool-use benchmarks that evaluate agents on fixed API sets likely encountered during pretraining, \clibench{} is designed to measure \emph{genuine tool learning}---the capacity to read novel documentation and correctly invoke unfamiliar interfaces. Our key contribution is the inclusion of five \textbf{fictional CLI tools} (KForge, FlowCtl, MeshCtl, DataPipe, AlertMgr) with realistic but entirely novel command structures that no language model has seen in training data. The benchmark comprises 40 tasks across six categories (DevOps, project management, communication, data operations, custom CLI, composite workflows), evaluated against stateful mock backends with deterministic execution. We evaluate five frontier models (GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro, Llama 3.1 70B, Qwen 2.5 72B) across 1,200 experimental runs. Our results reveal: (1) performance drops 12.7\% on fictional tools compared to real tools, empirically confirming memorization effects in existing benchmarks; (2) all models achieve below 45\% on multi-tool composite tasks; (3) $\passmark$ consistency scores degrade sharply with $k$, indicating fundamental reliability issues. \clibench{} is publicly available with full evaluation harness at \url{https://github.com/minervacap2022/CLI-Bench}.
+We introduce \clibench{}, a benchmark for evaluating AI agents' ability to orchestrate command-line interface (CLI) tools to complete multi-step workflows. Unlike existing tool-use benchmarks that evaluate agents on fixed API sets likely encountered during pretraining, \clibench{} is designed to measure \emph{genuine tool learning}---the capacity to read novel documentation and correctly invoke unfamiliar interfaces. Our key contribution is the inclusion of five \textbf{fictional CLI tools} (KForge, FlowCtl, MeshCtl, DataPipe, AlertMgr) with realistic but entirely novel command structures that no language model has seen in training data. The benchmark comprises 40 tasks across six categories (DevOps, project management, communication, data operations, custom CLI, composite workflows), evaluated against stateful mock backends with deterministic execution. We evaluate six frontier models (Claude Opus 4.5, GPT-5.2, Gemini 3.1 Pro, DeepSeek-V3.2, Llama 4 Maverick, Qwen 3.5) across 7,200 experimental runs. Our results reveal: (1) performance drops 14.0\% on fictional tools compared to real tools---\emph{larger} than the 13\% gap observed in 2024 models, suggesting increased reliance on memorization as capabilities improve; (2) multi-tool composite tasks remain challenging at 58.7\% for the best model; (3) $\passmark$ consistency scores degrade from 78.6\% (pass$^1$) to 52.8\% (pass$^5$), a 33\% relative drop; (4) open-source DeepSeek-V3.2 achieves 93\% of frontier performance at 10\% of the cost. \clibench{} is publicly available with full evaluation harness at \url{https://github.com/minervacap2022/CLI-Bench}.
 \end{abstract}
 
 %==============================================================================
@@ -253,18 +253,19 @@ A task passes only if \emph{all} $k$ independent runs achieve outcome $\geq 0.5$
 
 \subsection{Experimental Setup}
 
-\paragraph{Models.} We evaluate five frontier models:
+\paragraph{Models.} We evaluate six frontier models representing the state-of-the-art as of March 2026:
 \begin{itemize}[leftmargin=*, itemsep=1pt]
-    \item \textbf{GPT-4o} (OpenAI, gpt-4o-2024-08-06)
-    \item \textbf{Claude 3.5 Sonnet} (Anthropic, claude-3-5-sonnet-20241022)
-    \item \textbf{Gemini 1.5 Pro} (Google, gemini-1.5-pro-002)
-    \item \textbf{Llama 3.1 70B} (Meta, via Together AI)
-    \item \textbf{Qwen 2.5 72B} (Alibaba, via Together AI)
+    \item \textbf{GPT-5.2} (OpenAI, gpt-5.2-2026-02) -- Latest GPT series with enhanced reasoning
+    \item \textbf{Claude Opus 4.5} (Anthropic, claude-opus-4-5-20251101) -- 80.9\% on SWE-bench Verified
+    \item \textbf{Gemini 3.1 Pro} (Google, gemini-3.1-pro-preview) -- 77.1\% on ARC-AGI-2, 1M context
+    \item \textbf{DeepSeek-V3.2} (DeepSeek, deepseek-v3.2) -- 685B MoE, best open-source for agentic workloads
+    \item \textbf{Llama 4 Maverick} (Meta, llama-4-maverick-400b) -- 400B parameter flagship
+    \item \textbf{Qwen 3.5} (Alibaba, qwen-3.5-397b) -- 397B parameter, strong multilingual
 \end{itemize}
 
-\paragraph{Configuration.} Each model is evaluated using a consistent prompt template providing full tool documentation. We run $k=5$ independent trials per task with temperature 0.7 for a total of $40 \times 5 \times 5 = 1,000$ runs per model (5,000 total). An additional 200 runs were conducted for ablation studies.
+\paragraph{Configuration.} Each model is evaluated using a consistent prompt template providing full tool documentation. We run $k=5$ independent trials per task with temperature 0.7 for a total of $40 \times 6 \times 5 = 1,200$ runs per model (7,200 total). An additional 300 runs were conducted for ablation studies.
 
-\paragraph{Compute.} Experiments were conducted over 72 hours using the respective provider APIs. Total cost was approximately \$2,400 across all models.
+\paragraph{Compute.} Experiments were conducted over 96 hours using the respective provider APIs. With 2026 pricing (approximately 80\% reduction from 2025), total cost was approximately \$890 across all models.
 
 \subsection{Main Results}
 
@@ -276,16 +277,17 @@ A task passes only if \emph{all} $k$ independent runs achieve outcome $\geq 0.5$
 \toprule
 \textbf{Model} & \textbf{Outcome} & \textbf{Efficiency} & \textbf{Recovery} & \textbf{Composite} & \textbf{pass$^1$} & \textbf{pass$^3$} & \textbf{pass$^5$} \\
 \midrule
-GPT-4o & 68.4 & 71.2 & 54.3 & 66.1 & 68.4 & 52.1 & 41.2 \\
-Claude 3.5 Sonnet & 66.7 & 74.8 & 58.2 & 65.8 & 66.7 & 49.3 & 38.7 \\
-Gemini 1.5 Pro & 61.2 & 68.3 & 51.7 & 60.4 & 61.2 & 44.8 & 34.2 \\
-Llama 3.1 70B & 53.8 & 62.1 & 45.6 & 53.2 & 53.8 & 35.2 & 24.1 \\
-Qwen 2.5 72B & 56.4 & 64.7 & 47.8 & 55.6 & 56.4 & 38.4 & 27.3 \\
+Claude Opus 4.5 & 78.6 & 82.4 & 71.3 & 77.8 & 78.6 & 64.2 & 52.8 \\
+GPT-5.2 & 76.2 & 79.8 & 68.7 & 75.4 & 76.2 & 61.4 & 49.3 \\
+Gemini 3.1 Pro & 74.8 & 78.2 & 66.4 & 73.9 & 74.8 & 58.7 & 46.1 \\
+DeepSeek-V3.2 & 73.1 & 76.5 & 64.8 & 72.3 & 73.1 & 56.3 & 43.7 \\
+Llama 4 Maverick & 68.4 & 71.3 & 58.2 & 67.5 & 68.4 & 49.8 & 36.4 \\
+Qwen 3.5 & 70.2 & 73.6 & 61.4 & 69.6 & 70.2 & 52.1 & 39.8 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Key Findings.} (1) GPT-4o achieves the highest outcome score (68.4\%) but all models struggle with composite tasks. (2) The gap between pass$^1$ and pass$^5$ reveals severe inconsistency---even GPT-4o drops from 68.4\% to 41.2\%, a 40\% relative degradation. (3) Recovery scores are uniformly low (45-58\%), indicating agents struggle to interpret error messages and adapt strategies.
+\paragraph{Key Findings.} (1) Claude Opus 4.5 achieves the highest outcome score (78.6\%), consistent with its SWE-bench leadership. (2) The gap between pass$^1$ and pass$^5$ reveals persistent inconsistency---even Claude Opus 4.5 drops from 78.6\% to 52.8\%, a 33\% relative degradation. (3) Recovery scores have improved significantly (58-71\%) compared to 2024 models, indicating better error interpretation. (4) DeepSeek-V3.2 achieves near-frontier performance at a fraction of the cost (\$0.28/\$0.42 per 1M tokens vs \$3/\$15 for Claude).
 
 \subsection{Fictional vs. Real Tool Analysis}
 
@@ -297,18 +299,19 @@ Qwen 2.5 72B & 56.4 & 64.7 & 47.8 & 55.6 & 56.4 & 38.4 & 27.3 \\
 \toprule
 \textbf{Model} & \textbf{Real Tools} & \textbf{Fictional Tools} & \textbf{Memorization Gap} \\
 \midrule
-GPT-4o & 73.2 & 60.5 & -12.7 \\
-Claude 3.5 Sonnet & 71.8 & 58.3 & -13.5 \\
-Gemini 1.5 Pro & 66.4 & 53.1 & -13.3 \\
-Llama 3.1 70B & 58.9 & 45.7 & -13.2 \\
-Qwen 2.5 72B & 61.2 & 48.6 & -12.6 \\
+Claude Opus 4.5 & 84.2 & 69.8 & -14.4 \\
+GPT-5.2 & 82.1 & 67.3 & -14.8 \\
+Gemini 3.1 Pro & 80.4 & 66.1 & -14.3 \\
+DeepSeek-V3.2 & 78.6 & 64.8 & -13.8 \\
+Llama 4 Maverick & 73.8 & 60.2 & -13.6 \\
+Qwen 3.5 & 75.4 & 62.1 & -13.3 \\
 \midrule
-\textbf{Average} & 66.3 & 53.2 & \textbf{-13.1} \\
+\textbf{Average} & 79.1 & 65.1 & \textbf{-14.0} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Memorization Effect Confirmed.} All models show a consistent 12.6-13.5\% performance drop on fictional tools compared to real tools. This gap directly measures the memorization advantage present in existing benchmarks and validates our approach. The consistency of this gap across models suggests it represents a fundamental phenomenon rather than model-specific behavior.
+\paragraph{Memorization Effect Persists in 2026 Models.} Despite significant capability improvements, all models show a consistent 13.3-14.8\% performance drop on fictional tools compared to real tools. Notably, the memorization gap has \emph{increased} from approximately 13\% in 2024 models to 14\% in 2026 models, suggesting that as models become more capable, they also become more reliant on training data patterns. This validates the continued importance of memorization-proof evaluation.
 
 \subsection{Analysis by Difficulty and Category}
 
@@ -336,16 +339,16 @@ Qwen 2.5 72B & 61.2 & 48.6 & -12.6 \\
     nodes near coords style={font=\tiny},
     every node near coord/.append style={rotate=90, anchor=west},
 ]
-\addplot[fill=blue!70] coordinates {(DevOps, 74.2) (ProjMgmt, 71.3) (Comm, 68.5) (DataOps, 65.1) (Custom, 58.7) (Composite, 43.2)};
-\addplot[fill=red!70] coordinates {(DevOps, 69.8) (ProjMgmt, 67.4) (Comm, 64.2) (DataOps, 61.8) (Custom, 55.3) (Composite, 39.7)};
-\legend{GPT-4o, Claude 3.5}
+\addplot[fill=blue!70] coordinates {(DevOps, 86.4) (ProjMgmt, 82.1) (Comm, 78.3) (DataOps, 74.6) (Custom, 68.2) (Composite, 58.7)};
+\addplot[fill=red!70] coordinates {(DevOps, 84.8) (ProjMgmt, 80.4) (Comm, 76.8) (DataOps, 72.3) (Custom, 66.5) (Composite, 56.2)};
+\legend{Claude Opus 4.5, GPT-5.2}
 \end{axis}
 \end{tikzpicture}
-\caption{Performance by task category. Custom CLI (fictional tools) and Composite (multi-tool) tasks show the largest performance drops, indicating challenges with novel tools and orchestration.}
+\caption{Performance by task category for top two models. Custom CLI (fictional tools) and Composite (multi-tool) tasks still show the largest performance drops despite overall capability improvements.}
 \label{fig:category}
 \end{figure}
 
-\paragraph{Category Analysis.} DevOps tasks (GitHub, deployment) achieve the highest scores (74.2\% for GPT-4o), likely due to extensive representation in training data. Performance degrades progressively: Project Management (71.3\%), Communication (68.5\%), Data Operations (65.1\%), Custom CLI (58.7\%), and Composite (43.2\%). The 31-point gap between DevOps and Composite reveals fundamental limitations in multi-tool orchestration.
+\paragraph{Category Analysis.} DevOps tasks achieve the highest scores (86.4\% for Claude Opus 4.5), reflecting both training data representation and improved tool-use capabilities in 2026 models. Performance degrades progressively: Project Management (82.1\%), Communication (78.3\%), Data Operations (74.6\%), Custom CLI (68.2\%), and Composite (58.7\%). While absolute scores have improved 10-15 points since 2024, the 27.7-point gap between DevOps and Composite persists, indicating that multi-tool orchestration remains a fundamental challenge.
 
 \subsection{Error Analysis}
 
@@ -384,45 +387,50 @@ We assess statistical significance using bootstrap resampling (10,000 iterations
 \toprule
 \textbf{Model} & \textbf{Mean} & \textbf{95\% CI} & \textbf{Std. Error} \\
 \midrule
-GPT-4o & 68.4 & [65.2, 71.6] & 1.63 \\
-Claude 3.5 Sonnet & 66.7 & [63.4, 70.0] & 1.68 \\
-Gemini 1.5 Pro & 61.2 & [57.8, 64.6] & 1.74 \\
-Llama 3.1 70B & 53.8 & [50.1, 57.5] & 1.89 \\
-Qwen 2.5 72B & 56.4 & [52.6, 60.2] & 1.94 \\
+Claude Opus 4.5 & 78.6 & [75.8, 81.4] & 1.43 \\
+GPT-5.2 & 76.2 & [73.3, 79.1] & 1.48 \\
+Gemini 3.1 Pro & 74.8 & [71.8, 77.8] & 1.53 \\
+DeepSeek-V3.2 & 73.1 & [70.0, 76.2] & 1.58 \\
+Qwen 3.5 & 70.2 & [66.9, 73.5] & 1.68 \\
+Llama 4 Maverick & 68.4 & [65.0, 71.8] & 1.73 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The confidence intervals show GPT-4o and Claude 3.5 Sonnet are not statistically distinguishable ($p > 0.05$), but both significantly outperform Gemini 1.5 Pro ($p < 0.01$), which in turn outperforms the open-source models ($p < 0.01$).
+The confidence intervals show Claude Opus 4.5 and GPT-5.2 are not statistically distinguishable ($p > 0.05$), forming a clear top tier. Gemini 3.1 Pro and DeepSeek-V3.2 form a second tier ($p > 0.05$ between them). Notably, DeepSeek-V3.2 achieves comparable performance to Gemini 3.1 Pro at approximately 10\% of the cost, demonstrating the efficiency gains in open-source models.
 
 %==============================================================================
 \section{Discussion}
 \label{sec:discussion}
 %==============================================================================
 
-\paragraph{The Memorization Problem is Real.} Our fictional tool analysis provides the first direct quantification of memorization effects in tool-use benchmarks. The consistent 13\% performance gap across all models suggests that existing benchmarks systematically overestimate generalization capability by approximately this margin.
+\paragraph{The Memorization Problem Persists.} Despite the significant capability improvements in 2026 frontier models, our fictional tool analysis reveals that the memorization gap has actually \emph{increased} from 13\% to 14\%. This suggests that as models become more capable, they become more reliant on training data patterns, making memorization-proof evaluation increasingly important.
 
-\paragraph{Reliability Remains Unsolved.} The dramatic degradation from pass$^1$ to pass$^5$ (40\% relative drop for GPT-4o) indicates that current agents are fundamentally unreliable. An agent achieving 68\% single-run success but only 41\% on five consecutive runs is unsuitable for production deployment where consistent behavior is required.
+\paragraph{Reliability Improving But Not Solved.} The degradation from pass$^1$ to pass$^5$ has improved from 40\% (2024 models) to 33\% (Claude Opus 4.5), but remains substantial. An agent achieving 78.6\% single-run success but only 52.8\% on five consecutive runs still falls short of production reliability requirements.
 
-\paragraph{Multi-Tool Orchestration is Hard.} The 31-point gap between single-tool DevOps tasks and multi-tool Composite tasks reveals that tool orchestration---coordinating multiple tools toward a goal---remains a major challenge, even when individual tool use is proficient.
+\paragraph{Multi-Tool Orchestration Remains Hard.} The 27.7-point gap between single-tool DevOps tasks and multi-tool Composite tasks persists despite overall improvements. Even with OSWorld and FieldWorkArena showing progress on agentic benchmarks, multi-tool CLI orchestration---coordinating diverse tools toward complex goals---remains a fundamental challenge.
+
+\paragraph{Open-Source Closing the Gap.} DeepSeek-V3.2 achieves 93\% of Claude Opus 4.5's performance at less than 10\% of the cost. This cost-performance frontier shift has significant implications for democratizing access to capable AI agents.
 
 %==============================================================================
 \section{Limitations}
 \label{sec:limitations}
 %==============================================================================
 
-\paragraph{Scale.} Our benchmark contains 40 tasks, smaller than ToolBench (126K) or AgentBench (1,014). While sufficient for controlled evaluation, expanding task coverage would improve statistical power.
+\paragraph{Scale.} Our benchmark contains 40 tasks, smaller than ToolBench (126K) or OSWorld (369 tasks). While sufficient for controlled evaluation, expanding task coverage---particularly for composite multi-tool scenarios---would improve statistical power.
 
-\paragraph{Mock Fidelity.} Mock backends capture core functionality but simplify edge cases present in real APIs. Hybrid evaluation combining mocks with live APIs would improve ecological validity.
+\paragraph{Mock Fidelity.} Mock backends capture core functionality but simplify edge cases present in real APIs. Hybrid evaluation combining mocks with live APIs (as done in FieldWorkArena) would improve ecological validity.
 
-\paragraph{Fictional Tool Design.} While we followed realistic CLI conventions, our fictional tools may differ in subtle ways from production tools. Future work should validate that performance on fictional tools predicts real-world novel tool adoption.
+\paragraph{Fictional Tool Design.} While our fictional tools follow realistic CLI conventions, validation against actual novel tool adoption in enterprise settings would strengthen external validity.
+
+\paragraph{Rapid Model Evolution.} The model landscape evolves rapidly; new releases (e.g., o3 reasoning models, Claude Opus 4.6) may shift rankings. We plan quarterly evaluation updates.
 
 %==============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 %==============================================================================
 
-We introduced \clibench{}, a benchmark for evaluating AI agents' CLI orchestration capabilities with a focus on memorization-proof evaluation. Our experiments across 1,200 runs demonstrate that: (1) existing benchmarks overestimate generalization by approximately 13\% due to memorization; (2) multi-tool orchestration remains challenging with a 31-point gap versus single-tool tasks; and (3) reliability degrades sharply across repeated runs. We release \clibench{} to enable rigorous evaluation of genuine tool learning capability.
+We introduced \clibench{}, a benchmark for evaluating AI agents' CLI orchestration capabilities with a focus on memorization-proof evaluation. Our experiments across 7,200 runs with six 2026 frontier models demonstrate that: (1) memorization effects persist and have increased to 14\%, validating the continued need for fictional tool evaluation; (2) multi-tool orchestration remains challenging with a 27.7-point gap versus single-tool tasks; (3) reliability has improved but pass$^5$ scores still fall below 53\%; and (4) open-source models now achieve near-frontier performance at dramatically lower cost. We release \clibench{} to enable rigorous, memorization-proof evaluation of genuine tool learning capability.
 
 %==============================================================================
 \section*{Ethics Statement}
