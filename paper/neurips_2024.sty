@@ -1,0 +1,69 @@
+% neurips_2024.sty - Simplified NeurIPS-style formatting for arXiv preprints
+% Based on NeurIPS 2024 formatting guidelines
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{neurips_2024}[2024/03/31 NeurIPS 2024 style for arXiv]
+
+% Options
+\newif\if@final\@finalfalse
+\DeclareOption{final}{\@finaltrue}
+\DeclareOption{preprint}{\@finalfalse}
+\ProcessOptions\relax
+
+% Page layout
+\usepackage[letterpaper,margin=1in]{geometry}
+
+% Fonts
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+
+% Line spacing
+\linespread{1.05}
+
+% Section formatting
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\paragraph}[runin]{\normalsize\bfseries}{}{}{}
+
+% Caption formatting
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
+
+% Natbib for citations
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+
+% Abstract environment
+\renewenvironment{abstract}{%
+  \centerline{\large\bfseries Abstract}%
+  \vspace{0.5em}%
+  \begin{quote}%
+}{%
+  \end{quote}%
+  \vspace{1em}%
+}
+
+% Title formatting
+\makeatletter
+\def\@maketitle{%
+  \newpage
+  \null
+  \vskip 2em%
+  \begin{center}%
+    {\LARGE\bfseries \@title \par}%
+    \vskip 1.5em%
+    {\large
+      \lineskip .5em%
+      \begin{tabular}[t]{c}%
+        \@author
+      \end{tabular}\par}%
+    \vskip 1em%
+    {\large \@date}%
+  \end{center}%
+  \par
+  \vskip 1.5em}
+\makeatother
+
+\endinput

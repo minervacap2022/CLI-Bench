@@ -1,0 +1,27 @@
+% TikZ figure for benchmark overview
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    box/.style={rectangle, draw, rounded corners, minimum width=3cm, minimum height=1cm, align=center},
+    arrow/.style={->, thick}
+]
+
+% CLI-Bench flow
+\node[box, fill=blue!20] (agent1) {Agent};
+\node[box, fill=green!20, right=of agent1] (tools) {Tool Adapters\\(YAML specs)};
+\node[box, fill=orange!20, right=of tools] (backend) {Mock Backends\\(Stateful)};
+\node[box, fill=red!20, right=of backend] (eval) {Evaluator\\(State Diff)};
+
+\draw[arrow] (agent1) -- (tools);
+\draw[arrow] (tools) -- (backend);
+\draw[arrow] (backend) -- (eval);
+
+% Labels
+\node[above=0.5cm of tools] {\textbf{CLI-Bench}};
+
+% KLIK-Bench addition
+\node[box, fill=purple!20, below=of agent1] (persona) {Persona Context\\(Memory, Prefs)};
+\draw[arrow] (persona) -- (agent1);
+
+\node[below=0.3cm of persona] {\textbf{KLIK-Bench}};
+
+\end{tikzpicture}

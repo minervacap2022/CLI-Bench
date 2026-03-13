@@ -1,0 +1,50 @@
+% TikZ figure showing CLI-Bench and KLIK-Bench architecture
+\begin{tikzpicture}[
+    node distance=1.2cm and 1.5cm,
+    box/.style={rectangle, draw, rounded corners=3pt, minimum width=2.2cm, minimum height=0.9cm, align=center, font=\small},
+    smallbox/.style={rectangle, draw, rounded corners=2pt, minimum width=1.6cm, minimum height=0.6cm, align=center, font=\scriptsize},
+    agent/.style={box, fill=blue!20},
+    tools/.style={box, fill=green!20},
+    backend/.style={box, fill=orange!20},
+    eval/.style={box, fill=red!20},
+    persona/.style={box, fill=purple!20},
+    arrow/.style={->, thick, >=stealth},
+    dasharrow/.style={->, thick, dashed, >=stealth}
+]
+
+% CLI-Bench Flow (top)
+\node[agent] (agent) {LLM Agent};
+\node[tools, right=of agent] (adapters) {Tool Adapters\\{\scriptsize (YAML specs)}};
+\node[backend, right=of adapters] (backends) {Mock Backends\\{\scriptsize (Stateful)}};
+\node[eval, right=of backends] (evaluator) {Evaluator\\{\scriptsize (State Diff)}};
+
+\draw[arrow] (agent) -- node[above, font=\scriptsize] {commands} (adapters);
+\draw[arrow] (adapters) -- node[above, font=\scriptsize] {parsed} (backends);
+\draw[arrow] (backends) -- node[above, font=\scriptsize] {actual state} (evaluator);
+
+% Feedback loop
+\draw[arrow] (backends.south) -- ++(0, -0.5) -| node[near start, below, font=\scriptsize] {stdout/stderr} (agent.south);
+
+% Title for CLI-Bench
+\node[above=0.4cm of adapters, font=\bfseries] {\textsc{CLI-Bench}};
+
+% KLIK-Bench additions (bottom)
+\node[persona, below=1.5cm of agent] (persona) {Persona Context};
+\node[smallbox, below left=0.3cm and -0.3cm of persona, fill=purple!10] (prefs) {Preferences};
+\node[smallbox, below=0.3cm of persona, fill=purple!10] (graph) {Entity Graph};
+\node[smallbox, below right=0.3cm and -0.3cm of persona, fill=purple!10] (history) {Sessions};
+
+\draw[arrow] (persona) -- (agent);
+\draw[dasharrow, gray] (prefs.north) -- (persona.south west);
+\draw[dasharrow, gray] (graph.north) -- (persona.south);
+\draw[dasharrow, gray] (history.north) -- (persona.south east);
+
+% Expected state
+\node[smallbox, fill=gray!20, below=0.8cm of evaluator] (expected) {Expected State};
+\draw[arrow] (expected) -- (evaluator);
+\draw[dasharrow, purple] (persona) -| node[near end, left, font=\scriptsize, text=purple] {persona-specific} (expected);
+
+% Title for KLIK-Bench
+\node[below=0.4cm of graph, font=\bfseries] {\textsc{KLIK-Bench Extension}};
+
+\end{tikzpicture}

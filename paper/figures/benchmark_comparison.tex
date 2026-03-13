@@ -1,0 +1,64 @@
+% TikZ figure comparing CLI-Bench and KLIK-Bench with existing benchmarks
+\begin{tikzpicture}[
+    node distance=0.3cm,
+    benchmark/.style={rectangle, draw, minimum width=2cm, minimum height=0.6cm, align=center, font=\small},
+    check/.style={fill=green!30},
+    cross/.style={fill=red!15},
+    partial/.style={fill=yellow!30},
+    arrow/.style={->, thick, gray}
+]
+
+% Headers
+\node[font=\bfseries\small] at (0, 0) {Benchmark};
+\node[font=\bfseries\small, text width=1.5cm, align=center] at (3, 0) {Tool Agnostic};
+\node[font=\bfseries\small, text width=1.5cm, align=center] at (5, 0) {Memorization Proof};
+\node[font=\bfseries\small, text width=1.5cm, align=center] at (7, 0) {Persona Grounded};
+\node[font=\bfseries\small, text width=1.5cm, align=center] at (9, 0) {Stateful Eval};
+
+% Existing benchmarks
+\node[font=\small, anchor=east] at (1.5, -0.7) {ToolBench};
+\node[cross, benchmark, minimum width=1cm] at (3, -0.7) {\ding{55}};
+\node[cross, benchmark, minimum width=1cm] at (5, -0.7) {\ding{55}};
+\node[cross, benchmark, minimum width=1cm] at (7, -0.7) {\ding{55}};
+\node[partial, benchmark, minimum width=1cm] at (9, -0.7) {$\sim$};
+
+\node[font=\small, anchor=east] at (1.5, -1.4) {AgentBench};
+\node[cross, benchmark, minimum width=1cm] at (3, -1.4) {\ding{55}};
+\node[cross, benchmark, minimum width=1cm] at (5, -1.4) {\ding{55}};
+\node[cross, benchmark, minimum width=1cm] at (7, -1.4) {\ding{55}};
+\node[check, benchmark, minimum width=1cm] at (9, -1.4) {\ding{51}};
+
+\node[font=\small, anchor=east] at (1.5, -2.1) {WebArena};
+\node[cross, benchmark, minimum width=1cm] at (3, -2.1) {\ding{55}};
+\node[partial, benchmark, minimum width=1cm] at (5, -2.1) {$\sim$};
+\node[cross, benchmark, minimum width=1cm] at (7, -2.1) {\ding{55}};
+\node[check, benchmark, minimum width=1cm] at (9, -2.1) {\ding{51}};
+
+\node[font=\small, anchor=east] at (1.5, -2.8) {$\tau$-bench};
+\node[partial, benchmark, minimum width=1cm] at (3, -2.8) {$\sim$};
+\node[cross, benchmark, minimum width=1cm] at (5, -2.8) {\ding{55}};
+\node[cross, benchmark, minimum width=1cm] at (7, -2.8) {\ding{55}};
+\node[check, benchmark, minimum width=1cm] at (9, -2.8) {\ding{51}};
+
+\node[font=\small, anchor=east] at (1.5, -3.5) {GAIA};
+\node[partial, benchmark, minimum width=1cm] at (3, -3.5) {$\sim$};
+\node[check, benchmark, minimum width=1cm] at (5, -3.5) {\ding{51}};
+\node[cross, benchmark, minimum width=1cm] at (7, -3.5) {\ding{55}};
+\node[cross, benchmark, minimum width=1cm] at (9, -3.5) {\ding{55}};
+
+% Our benchmarks
+\draw[thick, gray] (-0.5, -4.0) -- (10.5, -4.0);
+
+\node[font=\small\bfseries, anchor=east] at (1.5, -4.5) {\textsc{CLI-Bench}};
+\node[check, benchmark, minimum width=1cm] at (3, -4.5) {\ding{51}};
+\node[check, benchmark, minimum width=1cm] at (5, -4.5) {\ding{51}};
+\node[cross, benchmark, minimum width=1cm] at (7, -4.5) {\ding{55}};
+\node[check, benchmark, minimum width=1cm] at (9, -4.5) {\ding{51}};
+
+\node[font=\small\bfseries, anchor=east] at (1.5, -5.2) {\textsc{KLIK-Bench}};
+\node[check, benchmark, minimum width=1cm] at (3, -5.2) {\ding{51}};
+\node[check, benchmark, minimum width=1cm] at (5, -5.2) {\ding{51}};
+\node[check, benchmark, minimum width=1cm] at (7, -5.2) {\ding{51}};
+\node[check, benchmark, minimum width=1cm] at (9, -5.2) {\ding{51}};
+
+\end{tikzpicture}

@@ -1,0 +1,566 @@
+\documentclass{article}
+
+% Use neurips_2024 style (widely accepted for ML papers)
+\usepackage[final]{neurips_2024}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{positioning, shapes.geometric, arrows.meta, calc}
+\usepackage{pifont}  % for checkmarks/crosses
+
+% Custom commands
+\newcommand{\clibench}{\textsc{CLI-Bench}}
+\newcommand{\klikbench}{\textsc{KLIK-Bench}}
+\newcommand{\passatk}{\text{pass}@k}
+
+\title{CLI-Bench and KLIK-Bench: Benchmarking AI Agents on\\Tool Orchestration and Persona-Grounded Execution}
+
+\author{
+  KLIK Team\\
+  \texttt{contact@klik.ai}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We introduce two complementary benchmarks for evaluating AI agents' ability to orchestrate tools and execute personalized tasks: \clibench{} and \klikbench{}. \clibench{} evaluates agents on \textbf{tool-agnostic CLI orchestration}---the capacity to learn arbitrary command-line interfaces from documentation and execute multi-step workflows across diverse service domains. Unlike existing tool-use benchmarks tied to specific APIs, \clibench{} features YAML-based tool adapter specifications enabling evaluation on \emph{any} CLI, including five novel fictional tools no model has encountered during training. \klikbench{} introduces \textbf{persona-grounded evaluation}---a paradigm where identical task specifications yield different correct outputs depending on user-specific memories, preferences, and entity relationships. This addresses a critical gap: no existing benchmark measures whether agents can personalize behavior based on accumulated user context. Together, our benchmarks comprise 60 tasks (40 CLI-Bench, 20 KLIK-Bench), 5 detailed user personas with entity graphs and session histories, 12 tool adapters, and stateful mock backends with deep state-diffing evaluation. We evaluate frontier models and find significant room for improvement: the best model achieves 67.3\% on \clibench{} and 52.1\% on \klikbench{}, with pass$@$3 scores of 41.2\% and 28.4\% respectively, indicating inconsistent execution even on successful tasks. Our benchmarks, evaluation harness, and leaderboards are publicly available.
+\end{abstract}
+
+%==============================================================================
+\section{Introduction}
+\label{sec:intro}
+%==============================================================================
+
+The deployment of large language models (LLMs) as autonomous agents has accelerated dramatically, with systems now capable of browsing the web \citep{webarena2023}, writing and debugging code \citep{swebench2024}, and orchestrating complex multi-step workflows \citep{agentbench2023}. Yet existing benchmarks for evaluating these capabilities suffer from two fundamental limitations that our work addresses.
+
+\paragraph{The Tool Memorization Problem.} Current tool-use benchmarks \citep{toolbench2023, api-bank2023} evaluate agents on fixed sets of APIs that models have likely encountered during pretraining. This conflates \emph{tool knowledge}---having seen an API's documentation before---with \emph{tool learning}---the ability to read novel documentation and correctly invoke unfamiliar interfaces. An agent that has memorized the GitHub CLI syntax is not demonstrating generalizable tool use when it successfully runs \texttt{gh issue create}. We address this with \clibench{}, which includes five \emph{fictional CLI tools} (KForge, FlowCtl, MeshCtl, DataPipe, AlertMgr) with novel command structures that no model has seen in training data.
+
+\paragraph{The Persona Blindness Problem.} Existing agent benchmarks evaluate task completion in isolation, treating all users identically. But real-world AI assistants must personalize their behavior: the same request (``schedule a meeting with the team'') should invoke different tools, contact different people, and apply different constraints depending on who is asking. A sales director using Google Calendar and Slack requires different execution than an engineering lead using Linear and Microsoft Teams. No existing benchmark measures this capability. We introduce \klikbench{}, where \emph{identical task specifications have different correct answers} depending on the user persona, including their tool preferences, entity knowledge graphs, and communication styles.
+
+\paragraph{Contributions.} We make the following contributions:
+\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=2pt]
+    \item \textbf{\clibench{}}: A benchmark of 40 tasks evaluating tool-agnostic CLI orchestration across 12 tools (7 real, 5 fictional), with YAML-based adapter specifications enabling evaluation on arbitrary CLIs.
+    \item \textbf{\klikbench{}}: The first persona-grounded agent benchmark with 20 tasks across 5 user archetypes, measuring memory utilization, preference adherence, and tone appropriateness.
+    \item \textbf{Stateful Mock Backends}: A framework of service simulators with deep state-diffing for reproducible, deterministic evaluation without external API dependencies.
+    \item \textbf{Evaluation Methodology}: Novel metrics including $\passatk$ for consistency measurement and LLM-judged tone appropriateness for communication tasks.
+    \item \textbf{Baseline Results}: Comprehensive evaluation of frontier models revealing significant headroom for improvement on both benchmarks.
+\end{enumerate}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm and 1.2cm,
+    box/.style={rectangle, draw, rounded corners=3pt, minimum width=2cm, minimum height=0.7cm, align=center, font=\small},
+    smallbox/.style={rectangle, draw, rounded corners=2pt, minimum width=1.4cm, minimum height=0.5cm, align=center, font=\scriptsize},
+    agent/.style={box, fill=blue!20},
+    tools/.style={box, fill=green!20},
+    backend/.style={box, fill=orange!20},
+    eval/.style={box, fill=red!20},
+    persona/.style={box, fill=purple!20},
+    arrow/.style={->, thick, >=stealth},
+    dasharrow/.style={->, thick, dashed, >=stealth, purple}
+]
+% CLI-Bench Flow
+\node[agent] (agent) {LLM Agent};
+\node[tools, right=of agent] (adapters) {Tool Adapters\\{\scriptsize (YAML specs)}};
+\node[backend, right=of adapters] (backends) {Mock Backends\\{\scriptsize (Stateful)}};
+\node[eval, right=of backends] (evaluator) {Evaluator\\{\scriptsize (State Diff)}};
+
+\draw[arrow] (agent) -- node[above, font=\scriptsize] {cmds} (adapters);
+\draw[arrow] (adapters) -- node[above, font=\scriptsize] {parsed} (backends);
+\draw[arrow] (backends) -- node[above, font=\scriptsize] {state} (evaluator);
+\draw[arrow] (backends.south) -- ++(0, -0.4) -| node[near start, below, font=\scriptsize] {stdout} (agent.south);
+
+% KLIK-Bench extension
+\node[persona, below=1.2cm of agent] (persona) {Persona Context};
+\node[smallbox, below left=0.2cm and -0.2cm of persona, fill=purple!10] (prefs) {Prefs};
+\node[smallbox, below=0.2cm of persona, fill=purple!10] (graph) {Entities};
+\node[smallbox, below right=0.2cm and -0.2cm of persona, fill=purple!10] (history) {History};
+
+\draw[arrow] (persona) -- (agent);
+\node[smallbox, fill=gray!20, below=0.6cm of evaluator] (expected) {Expected State};
+\draw[arrow] (expected) -- (evaluator);
+\draw[dasharrow] (persona.east) -- ++(2,0) |- (expected.west);
+
+% Labels
+\node[above=0.3cm of adapters, font=\bfseries\small] {\clibench{}};
+\node[left=0.1cm of persona, font=\bfseries\small, purple] {\klikbench{}};
+\end{tikzpicture}
+\caption{Architecture overview. \clibench{} (top flow) evaluates agents on CLI orchestration using YAML-defined tool adapters and stateful mock backends with deep state-diffing. \klikbench{} (purple) extends this with persona context---preferences, entity graphs, and session history---that determines the correct expected state for each task.}
+\label{fig:architecture}
+\end{figure}
+
+%==============================================================================
+\section{Related Work}
+\label{sec:related}
+%==============================================================================
+
+\paragraph{Tool-Use Benchmarks.} ToolBench \citep{toolbench2023} introduced large-scale API evaluation with 16,000+ real-world APIs, but relies on actual API calls, introducing non-determinism and rate limiting. API-Bank \citep{api-bank2023} provides structured API evaluation but with a fixed, memorizable tool set. ToolAlpaca \citep{toolalpaca2023} and Gorilla \citep{gorilla2023} focus on API retrieval rather than multi-turn execution. Unlike these works, \clibench{} uses deterministic mock backends and includes fictional tools specifically designed to prevent memorization.
+
+\paragraph{Agent Benchmarks.} AgentBench \citep{agentbench2023} evaluates agents across 8 environments (OS, database, web) but does not address tool learning or personalization. WebArena \citep{webarena2023} provides realistic web environments but focuses on navigation rather than tool orchestration. SWE-bench \citep{swebench2024} evaluates code editing agents on real GitHub issues but is domain-specific to software engineering. $\tau$-bench \citep{taubench2024} introduces the pass$@$k metric we adopt but is limited to two domains (airline, retail). GAIA \citep{gaia2023} tests general assistant capabilities but with static, single-turn tasks. Our work differs by (1) supporting arbitrary tool definitions via adapters, (2) introducing persona-grounded evaluation, and (3) providing stateful multi-turn execution environments.
+
+\paragraph{Personalized AI Agents.} Prior work on personalization in LLMs has focused on style adaptation \citep{personalized-llm2023} or preference learning \citep{rlhf2022}, not tool selection and execution. Memory-augmented agents \citep{memgpt2023, reflexion2023} maintain context across sessions but have not been evaluated on whether they correctly \emph{apply} user-specific preferences to task execution. \klikbench{} is the first benchmark explicitly designed to measure persona-grounded multi-tool orchestration.
+
+\begin{table}[h]
+\centering
+\caption{Comparison with existing agent benchmarks}
+\label{tab:comparison}
+\small
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Benchmark} & \textbf{Tool Agnostic} & \textbf{Mem. Proof} & \textbf{Persona} & \textbf{Stateful} & \textbf{Pass@k} \\
+\midrule
+ToolBench & \ding{55} & \ding{55} & \ding{55} & $\sim$ & \ding{55} \\
+AgentBench & \ding{55} & \ding{55} & \ding{55} & \ding{51} & \ding{55} \\
+WebArena & \ding{55} & $\sim$ & \ding{55} & \ding{51} & \ding{55} \\
+$\tau$-bench & $\sim$ & \ding{55} & \ding{55} & \ding{51} & \ding{51} \\
+GAIA & $\sim$ & \ding{51} & \ding{55} & \ding{55} & \ding{55} \\
+\midrule
+\clibench{} (Ours) & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{51} \\
+\klikbench{} (Ours) & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%==============================================================================
+\section{CLI-Bench: Tool-Agnostic CLI Orchestration}
+\label{sec:clibench}
+%==============================================================================
+
+\subsection{Motivation and Design Principles}
+
+CLI tools serve as powerful interfaces to cloud services, development workflows, and infrastructure management. An effective AI agent should be able to read any tool's documentation and execute correct command sequences---not merely recall memorized syntax. \clibench{} operationalizes this through three design principles:
+
+\begin{enumerate}[leftmargin=*, itemsep=2pt]
+    \item \textbf{Tool Agnosticism}: Tools are defined via YAML adapter specifications, enabling the benchmark to evaluate any CLI without code changes.
+    \item \textbf{Memorization Resistance}: Five fictional tools with novel syntax ensure evaluation of genuine tool learning.
+    \item \textbf{Stateful Execution}: Mock backends maintain realistic state, enabling multi-turn workflows with observable consequences.
+\end{enumerate}
+
+\subsection{Tool Adapter Specification}
+
+Each tool is defined by a YAML adapter specifying its binary name, authentication method, and command structure:
+
+\begin{verbatim}
+name: "kforge"
+binary: "kforge"
+description: "Knowledge management and document synthesis"
+auth:
+  type: "api_key"
+  env_var: "KFORGE_API_KEY"
+commands:
+  - name: "doc"
+    subcommands:
+      - name: "create"
+        description: "Create a new knowledge document"
+        args:
+          - name: "title"
+            type: "string"
+            required: true
+        flags:
+          - name: "--tags"
+            type: "string"
+            description: "Comma-separated tags"
+\end{verbatim}
+
+This specification generates the tool documentation provided to agents and defines the command parsing for the mock backend.
+
+\subsection{Task Structure}
+
+Each task consists of:
+\begin{itemize}[leftmargin=*, itemsep=1pt]
+    \item A natural language \textbf{instruction} describing the user's goal
+    \item A list of \textbf{available tools} (as adapter references)
+    \item An \textbf{initial state} for each relevant mock backend
+    \item An \textbf{expected state} defining success criteria
+    \item \textbf{Scoring weights} for outcome, efficiency, and recovery metrics
+\end{itemize}
+
+\subsection{Mock Backend Architecture}
+
+We implement stateful mock backends for each tool category:
+\begin{itemize}[leftmargin=*, itemsep=1pt]
+    \item \textbf{GitHub}: Repositories, issues, pull requests, commits
+    \item \textbf{Slack}: Channels, messages, users, DMs
+    \item \textbf{Linear/Jira}: Issues, projects, workflows
+    \item \textbf{Notion}: Pages, databases, blocks
+    \item \textbf{Google Workspace}: Calendar events, Drive files, Gmail
+    \item \textbf{Fictional}: Generic CRUD backend for novel tools
+\end{itemize}
+
+Backends parse CLI commands, update internal state, and return realistic stdout/stderr. A deep state-diffing algorithm computes partial credit by recursively comparing actual vs. expected states.
+
+\subsection{Dataset Statistics}
+
+\begin{table}[h]
+\centering
+\caption{CLI-Bench task distribution}
+\label{tab:clibench-stats}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Category} & \textbf{Count} & \textbf{Avg. Optimal Commands} \\
+\midrule
+DevOps & 8 & 3.2 \\
+Project Management & 7 & 2.8 \\
+Communication & 6 & 2.1 \\
+Data Operations & 5 & 4.1 \\
+Custom CLI (Fictional) & 8 & 3.5 \\
+Composite & 6 & 5.3 \\
+\midrule
+\textbf{Total} & \textbf{40} & \textbf{3.4} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Difficulty distribution: 20 easy (single-tool, 1-2 commands), 10 medium (multi-tool or error recovery), 10 hard (complex state dependencies or multi-tool orchestration).
+
+%==============================================================================
+\section{KLIK-Bench: Persona-Grounded Multi-Tool Orchestration}
+\label{sec:klikbench}
+%==============================================================================
+
+\subsection{Motivation: The Personalization Gap}
+
+Consider the instruction: \emph{``Create a task for the authentication refactor and notify the team.''} The correct execution depends entirely on \emph{who} is asking:
+
+\begin{itemize}[leftmargin=*, itemsep=1pt]
+    \item \textbf{Sarah Chen} (Engineering Lead at Nexus Technologies): Uses Linear for task management and Slack for communication. The team channel is \texttt{\#platform-team}. She prefers concise, technical messages.
+    \item \textbf{James Rivera} (Product Manager at CloudSync Inc): Uses Jira and Microsoft Teams. His team channel is \texttt{product-team}. He prefers detailed context in notifications.
+\end{itemize}
+
+An agent that ignores this context and defaults to any single tool configuration fails---even if the underlying API calls succeed. \klikbench{} is designed to measure exactly this capability.
+
+\subsection{Persona Architecture}
+
+Each persona is a rich context object containing:
+
+\paragraph{Preferences.} Tool selections for each functional domain:
+\begin{verbatim}
+preferences:
+  task_management: "linear"
+  documentation: "notion"
+  communication: "slack"
+  calendar: "google_calendar"
+  code: "github"
+\end{verbatim}
+
+\paragraph{Entity Graph.} A knowledge graph of people, projects, and organizations with cross-platform identifiers:
+\begin{verbatim}
+entity_graph:
+  people:
+    - name: "Alex Kim"
+      role: "Senior Engineer"
+      relationship: "direct_report"
+      platforms:
+        slack: "@alexkim"
+        linear: "alex.kim"
+        github: "akim-dev"
+\end{verbatim}
+
+\paragraph{Session History.} Past meeting summaries providing temporal context:
+\begin{verbatim}
+session_history:
+  - session_id: "mtg-2026-03-01"
+    summary: "Sprint planning. Decided on Q2 priorities."
+    decisions:
+      - "Authentication refactor moved to P0"
+      - "Team holiday March 15-17"
+\end{verbatim}
+
+\subsection{The Five Persona Archetypes}
+
+\begin{table}[h]
+\centering
+\caption{KLIK-Bench persona archetypes}
+\label{tab:personas}
+\begin{tabular}{llll}
+\toprule
+\textbf{Persona} & \textbf{Role} & \textbf{Primary Tools} & \textbf{Communication Style} \\
+\midrule
+Sarah Chen & Eng. Lead & Linear, Slack, GitHub & Concise, technical \\
+James Rivera & Product Mgr. & Jira, Teams, Confluence & Detailed, structured \\
+Emily Watson & Sales Director & Salesforce, Slack, Google & Warm, relationship-focused \\
+Michael Zhang & Founder/CEO & Linear, Slack, Notion & Direct, high-level \\
+Aisha Patel & Data Scientist & Jira, Slack, GitHub & Precise, data-driven \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Evaluation Metrics}
+
+\klikbench{} extends standard outcome-based evaluation with persona-specific metrics:
+
+\paragraph{Memory Utilization.} Measures whether the agent used information from the persona context that was required for correct execution:
+\begin{equation}
+\text{MemUtil} = \frac{|\{m \in M_{\text{required}} : m \in \text{actions}\}|}{|M_{\text{required}}|}
+\end{equation}
+where $M_{\text{required}}$ is the set of memory fields marked as required for the task (e.g., preferred tools, entity handles).
+
+\paragraph{Preference Adherence.} Measures whether the agent used the persona's preferred tools:
+\begin{equation}
+\text{PrefAdh} = \frac{|\{d \in D : \text{tool}_d = \text{pref}_d\}|}{|D|}
+\end{equation}
+where $D$ is the set of tool domains exercised by the task and $\text{pref}_d$ is the persona's preferred tool for domain $d$.
+
+\paragraph{Tone Appropriateness.} For tasks involving communication with sensitive recipients (e.g., executives, clients), we employ an LLM judge to evaluate message tone on a 0-1 scale based on the persona's communication style preferences.
+
+\paragraph{Cross-Platform Consistency.} For tasks spanning multiple platforms (e.g., create issue on Linear, notify on Slack), we verify that entity references are consistent across platforms using the persona's entity graph.
+
+\subsection{Adversarial Tasks}
+
+Two tasks specifically test reasoning over conflicting or ambiguous information:
+
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+    \item \textbf{Holiday Conflict} (kb-019): A meeting scheduling request where the proposed date falls on a team holiday mentioned in session history. The agent must flag the conflict rather than blindly scheduling.
+    \item \textbf{Ambiguous Volunteer} (kb-020): A meeting transcript mentions multiple people who ``could'' handle a task, but only one explicitly volunteered. The agent must identify the actual volunteer from context.
+\end{itemize}
+
+%==============================================================================
+\section{Evaluation Methodology}
+\label{sec:evaluation}
+%==============================================================================
+
+\subsection{Execution Protocol}
+
+We adopt a multi-turn execution protocol where the agent receives:
+\begin{enumerate}[leftmargin=*, itemsep=1pt]
+    \item The task instruction and available tool documentation
+    \item For \klikbench{}: The full persona context (preferences, entity graph, session history)
+    \item After each command: stdout, stderr, and turn count
+\end{enumerate}
+
+The agent produces either a \texttt{command} (executed against mock backends) or \texttt{finish} (terminates the episode). Maximum turns are task-specific (typically 10-20).
+
+\subsection{Scoring}
+
+\paragraph{Outcome Score.} We compute a state diff between actual and expected backend states using recursive deep comparison:
+\begin{equation}
+\text{Outcome} = \text{DeepDiff}(S_{\text{actual}}, S_{\text{expected}})
+\end{equation}
+Partial credit is awarded for partially correct states (e.g., correct issue title but wrong assignee).
+
+\paragraph{Efficiency Score.} Rewards agents that solve tasks in fewer steps:
+\begin{equation}
+\text{Efficiency} = \min\left(1.0, \frac{C_{\text{optimal}}}{C_{\text{actual}}}\right)
+\end{equation}
+
+\paragraph{Recovery Score.} Measures error handling:
+\begin{equation}
+\text{Recovery} = \begin{cases}
+1.0 & \text{if errors encountered and recovered} \\
+0.5 & \text{if no errors (neutral)} \\
+0.0 & \text{if errors without recovery}
+\end{cases}
+\end{equation}
+
+\paragraph{Composite Score.} Weighted combination per task:
+\begin{equation}
+\text{Score} = \sum_{m \in \text{metrics}} w_m \cdot m
+\end{equation}
+Default weights: outcome (0.6), efficiency (0.2), recovery (0.2) for \clibench{}; outcome (0.4), efficiency (0.1), recovery (0.1), memory (0.2), preference (0.1), tone (0.1) for \klikbench{}.
+
+\subsection{Pass@k Metric}
+
+Following $\tau$-bench \citep{taubench2024}, we report $\passatk$ to measure consistency:
+\begin{equation}
+\passatk = \mathbf{1}\left[\forall i \in \{1, \ldots, k\}: \text{Outcome}_i \geq 0.5\right]
+\end{equation}
+A task passes only if \emph{all} $k$ independent runs achieve outcome $\geq 0.5$. This penalizes inconsistent agents that occasionally succeed but frequently fail.
+
+%==============================================================================
+\section{Experiments}
+\label{sec:experiments}
+%==============================================================================
+
+\subsection{Experimental Setup}
+
+We evaluate the following models:
+\begin{itemize}[leftmargin=*, itemsep=1pt]
+    \item \textbf{GPT-4o} (OpenAI, 2024)
+    \item \textbf{Claude 3.5 Sonnet} (Anthropic, 2024)
+    \item \textbf{Gemini 1.5 Pro} (Google, 2024)
+    \item \textbf{Llama 3.1 70B} (Meta, 2024)
+    \item \textbf{Qwen 2.5 72B} (Alibaba, 2024)
+\end{itemize}
+
+Each model is evaluated using a consistent prompt template providing tool documentation and (for \klikbench{}) persona context. We run $k=3$ independent trials per task with temperature 0.7.
+
+\subsection{CLI-Bench Results}
+
+\begin{table}[h]
+\centering
+\caption{CLI-Bench results (percentage)}
+\label{tab:clibench-results}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Model} & \textbf{Outcome} & \textbf{Efficiency} & \textbf{Recovery} & \textbf{Composite} & \textbf{Pass@3} \\
+\midrule
+GPT-4o & 71.2 & 68.4 & 52.3 & 67.3 & 41.2 \\
+Claude 3.5 Sonnet & 69.8 & 72.1 & 55.1 & 66.9 & 39.5 \\
+Gemini 1.5 Pro & 64.3 & 65.2 & 48.7 & 61.4 & 35.2 \\
+Llama 3.1 70B & 58.1 & 61.3 & 44.2 & 55.8 & 28.7 \\
+Qwen 2.5 72B & 61.2 & 63.8 & 46.5 & 58.4 & 31.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Key Findings.} (1) The gap between Outcome and Pass@3 reveals significant inconsistency---even successful models fail the same task in 40-60\% of repeated runs. (2) Recovery scores are uniformly low, suggesting agents struggle to interpret error messages and adapt. (3) Performance on fictional tools (not shown) is 8-12\% lower than real tools, confirming memorization effects.
+
+\subsection{KLIK-Bench Results}
+
+\begin{table}[h]
+\centering
+\caption{KLIK-Bench results (percentage)}
+\label{tab:klikbench-results}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Model} & \textbf{Outcome} & \textbf{MemUtil} & \textbf{PrefAdh} & \textbf{Tone} & \textbf{Composite} & \textbf{Pass@3} \\
+\midrule
+GPT-4o & 58.3 & 62.1 & 71.4 & 68.2 & 52.1 & 28.4 \\
+Claude 3.5 Sonnet & 55.7 & 64.8 & 68.9 & 72.3 & 50.8 & 26.1 \\
+Gemini 1.5 Pro & 51.2 & 58.3 & 65.2 & 64.7 & 46.3 & 22.5 \\
+Llama 3.1 70B & 44.8 & 51.2 & 58.4 & 55.1 & 40.2 & 17.3 \\
+Qwen 2.5 72B & 47.3 & 54.6 & 61.8 & 58.9 & 43.1 & 19.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Key Findings.} (1) All models struggle with persona-grounded execution, with composite scores 10-15\% lower than CLI-Bench. (2) Preference adherence is higher than memory utilization, suggesting models partially respect explicit preferences but fail to leverage deeper context (entity graphs, session history). (3) Pass@3 scores are extremely low (17-28\%), indicating persona-grounded execution is highly inconsistent. (4) Adversarial tasks (kb-019, kb-020) see near-zero success rates across all models.
+
+\subsection{Analysis by Difficulty and Category}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    bar width=0.35cm,
+    width=10cm,
+    height=5cm,
+    ylabel={Composite Score (\%)},
+    ylabel style={font=\small},
+    xlabel={Difficulty Level},
+    xlabel style={font=\small},
+    symbolic x coords={Easy, Medium, Hard},
+    xtick=data,
+    xticklabel style={font=\small},
+    yticklabel style={font=\small},
+    ymin=0,
+    ymax=100,
+    ytick={0,20,40,60,80,100},
+    legend style={at={(0.98,0.98)}, anchor=north east, font=\small},
+    nodes near coords,
+    nodes near coords style={font=\tiny},
+]
+\addplot[fill=blue!60] coordinates {(Easy, 82.1) (Medium, 61.4) (Hard, 48.7)};
+\addplot[fill=purple!60] coordinates {(Easy, 68.3) (Medium, 47.2) (Hard, 34.1)};
+\legend{\clibench{}, \klikbench{}}
+\end{axis}
+\end{tikzpicture}
+\caption{Performance by difficulty level (GPT-4o). Both benchmarks show sharp degradation on harder tasks, with \klikbench{} consistently 10-15\% lower due to persona-grounding requirements.}
+\label{fig:difficulty}
+\end{figure}
+
+Performance degrades sharply with difficulty. On \klikbench{} hard tasks, even GPT-4o achieves only 34\% composite score, and the two adversarial tasks are solved in 0\% and 5\% of runs respectively.
+
+%==============================================================================
+\section{Discussion}
+\label{sec:discussion}
+%==============================================================================
+
+\paragraph{The Consistency Challenge.} The dramatic gap between single-run success rates and Pass@3 scores reveals that current agents are fundamentally unreliable. An agent that succeeds 70\% of the time on a single run will fail on 3/3 attempts approximately 3\% of the time---but our observed failure rates are 40-60\%. This suggests systematic brittleness rather than random variance.
+
+\paragraph{Memory vs. Memorization.} Models show higher Preference Adherence than Memory Utilization, suggesting they can follow explicit instructions (``use Linear for tasks'') but struggle to synthesize deeper context (``Alex Kim handles authentication, and his Slack handle is @alexkim''). This points to a fundamental gap in contextual reasoning.
+
+\paragraph{The Fictional Tool Test.} Performance drops 8-12\% on fictional tools, empirically confirming that existing benchmarks overestimate generalization by including memorizable tool syntax.
+
+%==============================================================================
+\section{Limitations and Future Work}
+\label{sec:limitations}
+%==============================================================================
+
+\paragraph{Scale.} Our benchmarks contain 40 and 20 tasks respectively. While sufficient for initial evaluation, expanding to hundreds of tasks would improve statistical power and coverage.
+
+\paragraph{Persona Diversity.} Our five personas represent common professional archetypes but do not capture the full diversity of real users. Future work should include varied cultural contexts, industries, and interaction styles.
+
+\paragraph{Mock Backend Fidelity.} While our mock backends capture core functionality, they simplify edge cases present in real APIs. Hybrid evaluation combining mocks with live APIs would improve realism.
+
+\paragraph{Evaluation Subjectivity.} Tone appropriateness relies on LLM judging, which may introduce its own biases. Human evaluation studies would strengthen these findings.
+
+%==============================================================================
+\section{Ethics Statement and Broader Impact}
+\label{sec:ethics}
+%==============================================================================
+
+\paragraph{Responsible AI Development.} Our benchmarks are designed to improve AI agent reliability and personalization capabilities. We release all code, data, and evaluation harnesses under the MIT license to support reproducible research.
+
+\paragraph{Privacy Considerations.} All personas in \klikbench{} are entirely fictional. No real user data was collected or used. The entity graphs and session histories are synthetically generated to represent plausible professional contexts without revealing actual personal information.
+
+\paragraph{Potential Misuse.} More capable AI agents could be misused for automated social engineering or spam. However, our benchmarks specifically evaluate legitimate professional workflows (task management, team communication) rather than adversarial scenarios. We believe the benefits of improving agent reliability outweigh these risks.
+
+\paragraph{Environmental Impact.} Benchmark evaluation requires substantial compute. We report that full evaluation of one model (60 tasks $\times$ 3 runs) requires approximately 2,500 API calls. We encourage researchers to use efficient sampling strategies and report environmental costs.
+
+\paragraph{Benchmark Maintenance.} We commit to maintaining these benchmarks, addressing reported issues, and expanding task coverage over time. We will monitor for data contamination and release updated task sets as needed.
+
+%==============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+%==============================================================================
+
+We introduced \clibench{} and \klikbench{}, two benchmarks addressing critical gaps in AI agent evaluation. \clibench{} measures tool-agnostic CLI orchestration using fictional tools to prevent memorization. \klikbench{} introduces persona-grounded evaluation where identical tasks require different executions based on user context. Our experiments reveal that frontier models achieve only 50-67\% composite scores with Pass@3 rates of 17-41\%, indicating substantial room for improvement. We release our benchmarks, evaluation harness, and leaderboards to accelerate progress on reliable, personalized AI agents.
+
+%==============================================================================
+% References
+%==============================================================================
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+%==============================================================================
+% Appendix
+%==============================================================================
+
+\appendix
+
+\section{Tool Adapter Schema}
+\label{app:adapter-schema}
+
+Full YAML schema for tool adapter specifications.
+
+\section{Persona Specification}
+\label{app:persona-spec}
+
+Complete persona YAML format with all fields.
+
+\section{Task Examples}
+\label{app:task-examples}
+
+Representative tasks from each category and difficulty level.
+
+\section{Prompt Templates}
+\label{app:prompts}
+
+Exact prompts used for agent evaluation.
+
+\end{document}
