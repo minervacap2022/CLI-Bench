@@ -1,3 +1,51 @@
+---
+configs:
+  - config_name: default
+    data_files:
+      - split: test
+        path: data/tasks.jsonl
+dataset_info:
+  features:
+    - name: id
+      dtype: string
+    - name: title
+      dtype: string
+    - name: difficulty
+      dtype: string
+    - name: category
+      dtype: string
+    - name: description
+      dtype: string
+    - name: tools_provided
+      dtype: string
+    - name: initial_state
+      dtype: string
+    - name: expected_state
+      dtype: string
+    - name: scoring
+      dtype: string
+    - name: max_turns
+      dtype: int64
+    - name: optimal_commands
+      dtype: int64
+    - name: timeout_seconds
+      dtype: int64
+  splits:
+    - name: test
+      num_examples: 40
+license: apache-2.0
+task_categories:
+  - text-generation
+tags:
+  - benchmark
+  - agent-evaluation
+  - cli
+  - tool-use
+pretty_name: CLI-Bench
+size_categories:
+  - n<1K
+---
+
 # CLI-Bench: Benchmarking AI Agents on Command-Line Tool Orchestration
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
