@@ -1,0 +1,41 @@
+id: cb-041
+title: "Fetch top 5 Hacker News stories"
+difficulty: easy
+category: info_retrieval
+description: |
+  Use the opencli tool to fetch the top 5 stories currently trending on
+  Hacker News. Display the title and score for each story.
+tools_provided:
+  - opencli
+initial_state:
+  opencli:
+    hackernews:
+      top:
+        - {rank: 1, title: "Show HN: AI-powered code review", score: 487, author: "techdev", comments: 142, url: "https://example.com/1"}
+        - {rank: 2, title: "PostgreSQL 18 Released", score: 352, author: "pgfan", comments: 98, url: "https://example.com/2"}
+        - {rank: 3, title: "Rust in the Linux Kernel", score: 291, author: "kernelhacker", comments: 67, url: "https://example.com/3"}
+        - {rank: 4, title: "WebAssembly 3.0 Spec", score: 203, author: "wasmdev", comments: 45, url: "https://example.com/4"}
+        - {rank: 5, title: "Open Source LLM Benchmark", score: 189, author: "mlresearch", comments: 76, url: "https://example.com/5"}
+        - {rank: 6, title: "New CSS Container Queries", score: 145, author: "cssdev", comments: 32, url: "https://example.com/6"}
+        - {rank: 7, title: "Kubernetes 2.0 Roadmap", score: 134, author: "k8sfan", comments: 55, url: "https://example.com/7"}
+    reddit: {hot: [], search: []}
+    github: {search: [], trending: []}
+    bbc: {news: []}
+    v2ex: {hot: []}
+expected_state:
+  opencli:
+    command_history:
+      - pattern: "opencli hackernews top.*--limit 5"
+    output_contains:
+      - "AI-powered code review"
+      - "PostgreSQL 18"
+      - "Rust in the Linux"
+      - "WebAssembly 3.0"
+      - "Open Source LLM"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

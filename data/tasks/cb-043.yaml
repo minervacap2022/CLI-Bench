@@ -1,0 +1,38 @@
+id: cb-043
+title: "Get hot posts from r/programming"
+difficulty: easy
+category: info_retrieval
+description: |
+  Use the opencli tool to fetch the hot posts from the "programming"
+  subreddit on Reddit. Show the title and score for each post.
+tools_provided:
+  - opencli
+initial_state:
+  opencli:
+    hackernews: {top: []}
+    reddit:
+      hot:
+        - {rank: 1, title: "Best practices for error handling in Go", subreddit: "r/programming", score: 1205, comments: 342, author: "gopher_fan", url: "https://reddit.com/1"}
+        - {rank: 2, title: "My home lab network diagram", subreddit: "r/homelab", score: 890, comments: 156, author: "homelabber", url: "https://reddit.com/2"}
+        - {rank: 3, title: "TypeScript 6.0 announced", subreddit: "r/programming", score: 675, comments: 89, author: "ts_fan", url: "https://reddit.com/3"}
+        - {rank: 4, title: "Show reddit: built a CLI tool", subreddit: "r/programming", score: 432, comments: 67, author: "clidev", url: "https://reddit.com/4"}
+        - {rank: 5, title: "GPU prices dropping", subreddit: "r/hardware", score: 1100, comments: 234, author: "hw_watcher", url: "https://reddit.com/5"}
+      search: []
+    github: {search: [], trending: []}
+    bbc: {news: []}
+    v2ex: {hot: []}
+expected_state:
+  opencli:
+    command_history:
+      - pattern: "opencli reddit hot.*--subreddit.*programming"
+    output_contains:
+      - "error handling in Go"
+      - "TypeScript 6.0"
+      - "CLI tool"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30

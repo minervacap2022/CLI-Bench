@@ -1,0 +1,39 @@
+id: cb-042
+title: "Search GitHub for Python web frameworks"
+difficulty: easy
+category: info_retrieval
+description: |
+  Use the opencli tool to search GitHub for repositories related to
+  "web framework" that are written in Python. List the repository name
+  and star count for each result.
+tools_provided:
+  - opencli
+initial_state:
+  opencli:
+    hackernews: {top: []}
+    reddit: {hot: [], search: []}
+    github:
+      search:
+        - {name: "fastapi/fastapi", description: "FastAPI web framework for Python", stars: 78000, language: "Python", url: "https://github.com/fastapi/fastapi"}
+        - {name: "django/django", description: "The web framework for perfectionists", stars: 82000, language: "Python", url: "https://github.com/django/django"}
+        - {name: "pallets/flask", description: "Lightweight web framework", stars: 68000, language: "Python", url: "https://github.com/pallets/flask"}
+        - {name: "expressjs/express", description: "Fast web framework for Node.js", stars: 65000, language: "JavaScript", url: "https://github.com/expressjs/express"}
+        - {name: "actix/actix-web", description: "Rust web framework", stars: 22000, language: "Rust", url: "https://github.com/actix/actix-web"}
+      trending: []
+    bbc: {news: []}
+    v2ex: {hot: []}
+expected_state:
+  opencli:
+    command_history:
+      - pattern: "opencli github search.*--query.*--language Python"
+    output_contains:
+      - "fastapi"
+      - "django"
+      - "flask"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 3
+optimal_commands: 1
+timeout_seconds: 30
