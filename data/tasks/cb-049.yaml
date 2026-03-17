@@ -1,0 +1,45 @@
+id: cb-049
+title: "Aggregate tech news across 3 platforms"
+difficulty: hard
+category: info_retrieval
+description: |
+  Gather technology-related content from three different platforms using
+  opencli: Hacker News top stories, BBC technology news, and V2EX hot
+  topics. Compile a unified list of the top item from each platform,
+  reporting the platform name, title, and engagement metric (score/replies).
+  The agent should fetch from all three sources and present a combined view.
+tools_provided:
+  - opencli
+initial_state:
+  opencli:
+    hackernews:
+      top:
+        - {rank: 1, title: "Breakthrough in quantum error correction", score: 720, author: "qc_researcher", comments: 189, url: "https://hn.com/1"}
+        - {rank: 2, title: "New Rust async runtime", score: 450, author: "async_dev", comments: 76, url: "https://hn.com/2"}
+    reddit: {hot: [], search: []}
+    github: {search: [], trending: []}
+    bbc:
+      news:
+        - {rank: 1, title: "EU passes comprehensive AI Act", category: "technology", summary: "Regulation covers all AI systems", url: "https://bbc.com/1"}
+        - {rank: 2, title: "Tech layoffs slow as hiring rebounds", category: "technology", summary: "Q1 hiring up 23%", url: "https://bbc.com/2"}
+    v2ex:
+      hot:
+        - {rank: 1, title: "Remote work policies in China tech 2026", node: "career", author: "v2_user", replies: 156}
+        - {rank: 2, title: "Best cloud GPU providers comparison", node: "cloud", author: "gpu_user", replies: 98}
+expected_state:
+  opencli:
+    command_history:
+      - pattern: "opencli hackernews top"
+      - pattern: "opencli bbc news"
+      - pattern: "opencli v2ex hot"
+    output_contains:
+      - "quantum error correction"
+      - "AI Act"
+      - "Remote work"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 8
+optimal_commands: 3
+timeout_seconds: 90

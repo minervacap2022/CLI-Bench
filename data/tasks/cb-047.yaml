@@ -1,0 +1,67 @@
+id: cb-047
+title: "Research trending AI topics and create tracking workflow"
+difficulty: hard
+category: composite
+description: |
+  Research current AI trends across multiple platforms, then set up a
+  tracking workflow:
+  1. Fetch top stories from Hacker News and filter for AI-related content
+  2. Search Reddit r/machinelearning for related discussions
+  3. Post a summary of findings to the #ai-research Slack channel
+  4. Create a Linear issue to track follow-up research on the most
+     discussed topic
+tools_provided:
+  - opencli
+  - slack
+  - linear
+initial_state:
+  opencli:
+    hackernews:
+      top:
+        - {rank: 1, title: "GPT-5 architecture leaked by insider", score: 890, author: "ai_insider", comments: 456, url: "https://hn.com/1"}
+        - {rank: 2, title: "New open-source speech model beats Whisper", score: 670, author: "ml_dev", comments: 234, url: "https://hn.com/2"}
+        - {rank: 3, title: "PostgreSQL 18 release notes", score: 520, author: "pgfan", comments: 89, url: "https://hn.com/3"}
+        - {rank: 4, title: "Anthropic publishes AI safety research paper", score: 480, author: "safety_first", comments: 312, url: "https://hn.com/4"}
+        - {rank: 5, title: "New JavaScript runtime benchmarks", score: 340, author: "jsdev", comments: 67, url: "https://hn.com/5"}
+    reddit:
+      hot:
+        - {rank: 1, title: "GPT-5 discussion thread - what we know so far", subreddit: "r/machinelearning", score: 3400, comments: 1200, author: "ml_researcher", url: "https://reddit.com/ml/1"}
+        - {rank: 2, title: "Open source speech recognition comparison 2026", subreddit: "r/machinelearning", score: 1800, comments: 560, author: "speech_dev", url: "https://reddit.com/ml/2"}
+        - {rank: 3, title: "AI safety alignment approaches - survey", subreddit: "r/machinelearning", score: 1200, comments: 340, author: "alignment_fan", url: "https://reddit.com/ml/3"}
+      search: []
+    github: {search: [], trending: []}
+    bbc: {news: []}
+    v2ex: {hot: []}
+  slack:
+    channels:
+      - {id: "C200", name: "ai-research", messages: []}
+    users: []
+  linear:
+    teams:
+      - id: "TEAM-1"
+        name: "Research"
+        issues: []
+expected_state:
+  opencli:
+    command_history:
+      - pattern: "opencli hackernews top"
+      - pattern: "opencli reddit"
+  slack:
+    channels:
+      - id: "C200"
+        name: "ai-research"
+        messages:
+          - contains: ["GPT-5"]
+  linear:
+    teams:
+      - id: "TEAM-1"
+        issues:
+          - title_contains: "research"
+            state: open
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 10
+optimal_commands: 4
+timeout_seconds: 90

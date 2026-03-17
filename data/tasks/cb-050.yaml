@@ -1,0 +1,66 @@
+id: cb-050
+title: "Full research pipeline: discover trends, notify team, track follow-ups"
+difficulty: hard
+category: composite
+description: |
+  Execute a complete research and notification pipeline:
+  1. Search GitHub for repositories related to "agent framework" in Python
+  2. Check Hacker News for any discussions about the top result
+  3. Post the findings to #engineering Slack channel with repo details
+  4. Create an issue in "acme-corp/research" to evaluate the top
+     repository, including its name, stars, and description
+  The workflow requires combining information across platforms and tools.
+tools_provided:
+  - opencli
+  - slack
+  - gh
+initial_state:
+  opencli:
+    hackernews:
+      top:
+        - {rank: 1, title: "CrewAI vs AutoGen: agent framework comparison", score: 650, author: "agent_dev", comments: 234, url: "https://hn.com/1"}
+        - {rank: 2, title: "PostgreSQL replication deep dive", score: 420, author: "dba", comments: 67, url: "https://hn.com/2"}
+        - {rank: 3, title: "LangGraph for production agent workflows", score: 380, author: "langchain_user", comments: 145, url: "https://hn.com/3"}
+    reddit: {hot: [], search: []}
+    github:
+      search:
+        - {name: "crewai/crewai", description: "Framework for orchestrating AI agents", stars: 24000, language: "Python", url: "https://github.com/crewai/crewai"}
+        - {name: "microsoft/autogen", description: "Multi-agent conversation framework", stars: 35000, language: "Python", url: "https://github.com/microsoft/autogen"}
+        - {name: "langchain-ai/langgraph", description: "Build stateful agent workflows", stars: 8500, language: "Python", url: "https://github.com/langchain-ai/langgraph"}
+      trending: []
+    bbc: {news: []}
+    v2ex: {hot: []}
+  slack:
+    channels:
+      - {id: "C300", name: "engineering", messages: []}
+    users: []
+  gh:
+    repos:
+      acme-corp/research:
+        issues: []
+        pulls: []
+        commits: []
+expected_state:
+  opencli:
+    command_history:
+      - pattern: "opencli github search.*--query.*agent.*--language.*Python"
+      - pattern: "opencli hackernews top"
+  slack:
+    channels:
+      - id: "C300"
+        name: "engineering"
+        messages:
+          - contains: ["autogen"]
+  gh:
+    repos:
+      acme-corp/research:
+        issues:
+          - title_contains: "autogen"
+            state: open
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 12
+optimal_commands: 4
+timeout_seconds: 120

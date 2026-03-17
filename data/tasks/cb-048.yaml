@@ -1,0 +1,50 @@
+id: cb-048
+title: "Find trending Rust repos and create evaluation issues"
+difficulty: hard
+category: composite
+description: |
+  Use opencli to find trending GitHub repositories written in Rust. For
+  each repository with more than 2000 stars, create a separate issue in
+  "acme-corp/evaluations" with the repo name, description, and star count.
+  At least 2 issues should be created.
+tools_provided:
+  - opencli
+  - gh
+initial_state:
+  opencli:
+    hackernews: {top: []}
+    reddit: {hot: [], search: []}
+    github:
+      search: []
+      trending:
+        - {name: "oxide-computer/hubris", description: "Firmware for Oxide rack servers", stars: 3100, language: "Rust", url: "https://github.com/oxide-computer/hubris"}
+        - {name: "paradigm-ai/srt", description: "Streaming runtime for AI inference", stars: 5200, language: "Rust", url: "https://github.com/paradigm-ai/srt"}
+        - {name: "user123/tiny-project", description: "Small utility tool", stars: 150, language: "Rust", url: "https://github.com/user123/tiny-project"}
+        - {name: "quantum-db/quasar", description: "Distributed vector store", stars: 2800, language: "Rust", url: "https://github.com/quantum-db/quasar"}
+        - {name: "webtools/mini-css", description: "CSS minifier", stars: 800, language: "Rust", url: "https://github.com/webtools/mini-css"}
+    bbc: {news: []}
+    v2ex: {hot: []}
+  gh:
+    repos:
+      acme-corp/evaluations:
+        issues: []
+        pulls: []
+        commits: []
+expected_state:
+  opencli:
+    command_history:
+      - pattern: "opencli github trending"
+  gh:
+    repos:
+      acme-corp/evaluations:
+        issues:
+          - title_contains: "hubris"
+          - title_contains: "srt"
+          - title_contains: "quasar"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 10
+optimal_commands: 4
+timeout_seconds: 90
