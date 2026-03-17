@@ -1,0 +1,123 @@
+name: opencli
+description: Open-source CLI aggregator for browsing HackerNews, Reddit, GitHub trending, BBC News, and V2EX
+binary: opencli
+auth:
+  type: none
+commands:
+  - name: hackernews top
+    description: Get the current top stories from Hacker News
+    args:
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of stories to return
+    output_format: json
+    side_effects: false
+    example: "opencli hackernews top --limit 10"
+
+  - name: reddit hot
+    description: Get hot posts from Reddit, optionally filtered by subreddit
+    args:
+      - name: subreddit
+        type: string
+        required: false
+        description: Subreddit name to filter by
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of posts to return
+    output_format: json
+    side_effects: false
+    example: "opencli reddit hot --subreddit python --limit 20"
+
+  - name: reddit search
+    description: Search Reddit posts by keyword query
+    args:
+      - name: query
+        type: string
+        required: true
+        description: Search query string
+      - name: subreddit
+        type: string
+        required: false
+        description: Subreddit name to search within
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of results to return
+    output_format: json
+    side_effects: false
+    example: "opencli reddit search --query 'rust async' --subreddit programming --limit 15"
+
+  - name: github search
+    description: Search GitHub repositories by keyword query
+    args:
+      - name: query
+        type: string
+        required: true
+        description: Search query string
+      - name: language
+        type: string
+        required: false
+        description: Filter by programming language
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of repositories to return
+    output_format: json
+    side_effects: false
+    example: "opencli github search --query 'machine learning' --language python --limit 10"
+
+  - name: github trending
+    description: Get trending repositories from GitHub
+    args:
+      - name: language
+        type: string
+        required: false
+        description: Filter by programming language
+      - name: since
+        type: enum
+        required: false
+        description: Time range for trending calculation
+        values: ["daily", "weekly", "monthly"]
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of repositories to return
+    output_format: json
+    side_effects: false
+    example: "opencli github trending --language python --since weekly --limit 10"
+
+  - name: bbc news
+    description: Get BBC News headlines, optionally filtered by category
+    args:
+      - name: category
+        type: enum
+        required: false
+        description: News category to filter by
+        values: ["world", "business", "technology", "science", "health", "entertainment"]
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of headlines to return
+    output_format: json
+    side_effects: false
+    example: "opencli bbc news --category technology --limit 15"
+
+  - name: v2ex hot
+    description: Get hot topics from V2EX community
+    args:
+      - name: limit
+        type: int
+        required: false
+        description: Maximum number of topics to return
+    output_format: json
+    side_effects: false
+    example: "opencli v2ex hot --limit 20"
+
+  - name: list
+    description: List all supported sites and their available commands
+    args: []
+    output_format: json
+    side_effects: false
+    example: "opencli list"

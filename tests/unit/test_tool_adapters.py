@@ -17,7 +17,8 @@ TOOLS_DIR = Path(__file__).resolve().parent.parent.parent / "cli_bench" / "tool_
 
 REAL_TOOLS = ["gh", "slack", "linear", "notion", "google", "jira", "microsoft"]
 FICTIONAL_TOOLS = ["kforge", "flowctl", "meshctl", "datapipe", "alertmgr"]
-ALL_TOOLS = REAL_TOOLS + FICTIONAL_TOOLS
+OPEN_TOOLS = ["opencli"]
+ALL_TOOLS = REAL_TOOLS + FICTIONAL_TOOLS + OPEN_TOOLS
 
 
 class TestAllToolAdaptersLoad:
