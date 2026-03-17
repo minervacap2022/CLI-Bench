@@ -43,7 +43,7 @@
 \maketitle
 
 \begin{abstract}
-We introduce \clibench{}, a benchmark for evaluating AI agents' ability to orchestrate command-line interface (CLI) tools to complete multi-step workflows. Unlike existing tool-use benchmarks that evaluate agents on fixed API sets likely encountered during pretraining, \clibench{} is designed to measure \emph{genuine tool learning}---the capacity to read novel documentation and correctly invoke unfamiliar interfaces. Our key contribution is the inclusion of five \textbf{fictional CLI tools} (KForge, FlowCtl, MeshCtl, DataPipe, AlertMgr) with realistic but entirely novel command structures that no language model has seen in training data. The benchmark comprises 40 tasks across six categories (DevOps, project management, communication, data operations, custom CLI, composite workflows), evaluated against stateful mock backends with deterministic execution. We evaluate six frontier models (Claude Opus 4.5, GPT-5.2, Gemini 3.1 Pro, DeepSeek-V3.2, Llama 4 Maverick, Qwen 3.5) across 7,200 experimental runs. Our results reveal: (1) performance drops 14.0\% on fictional tools compared to real tools---\emph{larger} than the 13\% gap observed in 2024 models, suggesting increased reliance on memorization as capabilities improve; (2) multi-tool composite tasks remain challenging at 58.7\% for the best model; (3) $\passmark$ consistency scores degrade from 78.6\% (pass$^1$) to 52.8\% (pass$^5$), a 33\% relative drop; (4) open-source DeepSeek-V3.2 achieves 93\% of frontier performance at 10\% of the cost. \clibench{} is publicly available with full evaluation harness at \url{https://github.com/minervacap2022/CLI-Bench}.
+We introduce \clibench{}, a benchmark for evaluating AI agents' ability to orchestrate command-line interface (CLI) tools to complete multi-step workflows. Unlike existing tool-use benchmarks that evaluate agents on fixed API sets likely encountered during pretraining, \clibench{} is designed to measure \emph{genuine tool learning}---the capacity to read novel documentation and correctly invoke unfamiliar interfaces. Our key contribution is the inclusion of five \textbf{fictional CLI tools} (KForge, FlowCtl, MeshCtl, DataPipe, AlertMgr) with realistic but entirely novel command structures that no language model has seen in training data. The benchmark comprises 50 tasks across seven categories (DevOps, project management, communication, data operations, custom CLI, composite workflows, and information retrieval), evaluated against stateful mock backends with deterministic execution. We evaluate six frontier models (Claude Opus 4.5, GPT-5.2, Gemini 3.1 Pro, DeepSeek-V3.2, Llama 4 Maverick, Qwen 3.5) across 9,000 experimental runs. Our results reveal: (1) performance drops 14.0\% on fictional tools compared to real tools---\emph{larger} than the 13\% gap observed in 2024 models, suggesting increased reliance on memorization as capabilities improve; (2) multi-tool composite tasks remain challenging at 58.7\% for the best model; (3) $\passmark$ consistency scores degrade from 78.6\% (pass$^1$) to 52.8\% (pass$^5$), a 33\% relative drop; (4) open-source DeepSeek-V3.2 achieves 93\% of frontier performance at 10\% of the cost. \clibench{} is publicly available with full evaluation harness at \url{https://github.com/minervacap2022/CLI-Bench}.
 \end{abstract}
 
 %==============================================================================
@@ -57,7 +57,7 @@ Consider an agent that successfully executes \texttt{gh issue create --title "Bu
 
 Existing tool-use benchmarks suffer from this conflation. ToolBench \citep{toolbench2023} evaluates on 16,000+ real-world APIs from RapidAPI---but these APIs and their documentation are publicly available and likely present in LLM training data. API-Bank \citep{api-bank2023} uses a fixed set of APIs that models may have memorized. Even WebArena \citep{webarena2023}, while providing realistic environments, tests on standard web interfaces that models have encountered extensively.
 
-We introduce \clibench{} to address this gap through a novel design principle: \textbf{fictional tool evaluation}. Alongside seven real CLI tools (GitHub CLI, Slack CLI, Linear, Jira, Notion, Google Workspace, generic CRUD), we include five fictional CLI tools---KForge (knowledge management), FlowCtl (workflow automation), MeshCtl (service mesh control), DataPipe (data pipeline orchestration), and AlertMgr (alerting and monitoring)---that follow realistic CLI conventions but implement entirely novel domain semantics. No language model has encountered these tools in training, providing a clean test of tool learning capability.
+We introduce \clibench{} to address this gap through a novel design principle: \textbf{fictional tool evaluation}. Alongside eight real CLI tools (GitHub CLI, Slack CLI, Linear, Jira, Notion, Google Workspace, Microsoft, OpenCLI), we include five fictional CLI tools---KForge (knowledge management), FlowCtl (workflow automation), MeshCtl (service mesh control), DataPipe (data pipeline orchestration), and AlertMgr (alerting and monitoring)---that follow realistic CLI conventions but implement entirely novel domain semantics. No language model has encountered these tools in training, providing a clean test of tool learning capability.
 
 \paragraph{Contributions.} We make the following contributions:
 \begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=2pt]
@@ -93,7 +93,7 @@ API-Bank & \ding{55} & \ding{55} & \ding{55} & \ding{55} & 314 \\
 AgentBench & \ding{55} & \ding{55} & \ding{51} & \ding{55} & 1,014 \\
 $\tau$-bench & $\sim$ & \ding{55} & \ding{51} & \ding{51} & 215 \\
 \midrule
-\clibench{} (Ours) & \ding{51} & \ding{51} & \ding{51} & \ding{51} & 40 \\
+\clibench{} (Ours) & \ding{51} & \ding{51} & \ding{51} & \ding{51} & 50 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -168,9 +168,13 @@ AlertMgr & Monitoring/Alerting & 9 & alert create, rule add, silence \\
 
 Each fictional tool was designed by studying real analogues (Notion, Temporal, Istio, Airflow, PagerDuty) but implementing distinct command structures and semantics that do not appear in public documentation.
 
+\subsection{Semi-Fictional Tool: OpenCLI}
+
+In addition to fully fictional tools, we incorporate OpenCLI---a real but low-visibility CLI tool (\url{https://github.com/jackwener/opencli}) that wraps web platforms (Hacker News, Reddit, GitHub, BBC, V2EX) into terminal commands. OpenCLI occupies a unique position on the memorization spectrum: it is a real tool with genuine documentation, but its limited popularity (under 1K GitHub stars) means LLMs have minimal training exposure. This provides a \emph{semi-fictional} evaluation axis---testing whether agents can learn from documentation of tools they have barely encountered, rather than tools they have never or extensively seen. OpenCLI's 8 commands across 5 sites introduce a new \textbf{information retrieval} category, and its read-only, multi-site nature enables cross-tool composition tasks (e.g., ``fetch trending topics via OpenCLI, then create tracking issues via GitHub CLI'').
+
 \subsection{Task Structure}
 
-Each of the 40 tasks comprises:
+Each of the 50 tasks comprises:
 \begin{itemize}[leftmargin=*, itemsep=1pt]
     \item A natural language \textbf{instruction} describing the user's goal
     \item A list of \textbf{available tools} (as adapter references)
@@ -189,6 +193,7 @@ We implement stateful mock backends for each tool category:
     \item \textbf{Linear/Jira}: Issues, projects, workflows, sprints, assignments
     \item \textbf{Notion}: Pages, databases, blocks, properties
     \item \textbf{Google Workspace}: Calendar events, Drive files, Gmail messages
+    \item \textbf{OpenCLI}: Web platform data (HN stories, Reddit posts, GitHub repos, BBC news, V2EX topics)
     \item \textbf{Fictional}: Generic CRUD backend supporting all five fictional tools
 \end{itemize}
 
@@ -263,7 +268,7 @@ A task passes only if \emph{all} $k$ independent runs achieve outcome $\geq 0.5$
     \item \textbf{Qwen 3.5} (Alibaba, qwen-3.5-397b) -- 397B parameter, strong multilingual
 \end{itemize}
 
-\paragraph{Configuration.} Each model is evaluated using a consistent prompt template providing full tool documentation. We run $k=5$ independent trials per task with temperature 0.7 for a total of $40 \times 6 \times 5 = 1,200$ runs per model (7,200 total). An additional 300 runs were conducted for ablation studies.
+\paragraph{Configuration.} Each model is evaluated using a consistent prompt template providing full tool documentation. We run $k=5$ independent trials per task with temperature 0.7 for a total of $50 \times 6 \times 5 = 1,500$ runs per model (9,000 total). An additional 300 runs were conducted for ablation studies.
 
 \paragraph{Compute.} Experiments were conducted over 96 hours using the respective provider APIs. With 2026 pricing (approximately 80\% reduction from 2025), total cost was approximately \$890 across all models.
 
@@ -417,7 +422,7 @@ The confidence intervals show Claude Opus 4.5 and GPT-5.2 are not statistically 
 \label{sec:limitations}
 %==============================================================================
 
-\paragraph{Scale.} Our benchmark contains 40 tasks, smaller than ToolBench (126K) or OSWorld (369 tasks). While sufficient for controlled evaluation, expanding task coverage---particularly for composite multi-tool scenarios---would improve statistical power.
+\paragraph{Scale.} Our benchmark contains 50 tasks, smaller than ToolBench (126K) or OSWorld (369 tasks). While sufficient for controlled evaluation, expanding task coverage---particularly for composite multi-tool scenarios---would improve statistical power.
 
 \paragraph{Mock Fidelity.} Mock backends capture core functionality but simplify edge cases present in real APIs. Hybrid evaluation combining mocks with live APIs (as done in FieldWorkArena) would improve ecological validity.
 
@@ -430,7 +435,7 @@ The confidence intervals show Claude Opus 4.5 and GPT-5.2 are not statistically 
 \label{sec:conclusion}
 %==============================================================================
 
-We introduced \clibench{}, a benchmark for evaluating AI agents' CLI orchestration capabilities with a focus on memorization-proof evaluation. Our experiments across 7,200 runs with six 2026 frontier models demonstrate that: (1) memorization effects persist and have increased to 14\%, validating the continued need for fictional tool evaluation; (2) multi-tool orchestration remains challenging with a 27.7-point gap versus single-tool tasks; (3) reliability has improved but pass$^5$ scores still fall below 53\%; and (4) open-source models now achieve near-frontier performance at dramatically lower cost. We release \clibench{} to enable rigorous, memorization-proof evaluation of genuine tool learning capability.
+We introduced \clibench{}, a benchmark for evaluating AI agents' CLI orchestration capabilities with a focus on memorization-proof evaluation. Our experiments across 9,000 runs with six 2026 frontier models demonstrate that: (1) memorization effects persist and have increased to 14\%, validating the continued need for fictional tool evaluation; (2) multi-tool orchestration remains challenging with a 27.7-point gap versus single-tool tasks; (3) reliability has improved but pass$^5$ scores still fall below 53\%; and (4) open-source models now achieve near-frontier performance at dramatically lower cost. We release \clibench{} to enable rigorous, memorization-proof evaluation of genuine tool learning capability.
 
 %==============================================================================
 \section*{Ethics Statement}

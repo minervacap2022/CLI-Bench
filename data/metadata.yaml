@@ -6,11 +6,11 @@ description: |
   Tasks span single-tool operations, multi-tool orchestration, and complex
   workflows involving fictional CLIs.
 
-task_count: 40
+task_count: 50
 difficulty_distribution:
-  easy: 20
-  medium: 10
-  hard: 10
+  easy: 23
+  medium: 13
+  hard: 14
 
 categories:
   - devops
@@ -19,6 +19,7 @@ categories:
   - data_ops
   - custom_cli
   - composite
+  - info_retrieval
 
 tools:
   real_world:
@@ -29,6 +30,7 @@ tools:
     - google      # Google Workspace (Gmail, Calendar, Drive)
     - jira        # Jira CLI
     - microsoft   # Microsoft 365
+    - opencli     # Web platform data retrieval (HN, Reddit, GitHub, BBC, V2EX)
   fictional:
     - kforge      # Artifact/deployment management
     - flowctl     # Workflow/approval engine

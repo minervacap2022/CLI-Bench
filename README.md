@@ -57,7 +57,7 @@ size_categories:
 
 CLI-Bench is an evaluation benchmark for measuring AI agents' ability to learn and use command-line interface (CLI) tools to complete real-world tasks. Unlike existing benchmarks that test general coding ability or narrow tool-use scenarios, CLI-Bench evaluates **tool-agnostic CLI orchestration** -- the capacity to read tool documentation, plan multi-step workflows, execute commands, interpret outputs, recover from errors, and achieve desired end states across diverse service domains.
 
-The benchmark comprises 40 tasks spanning six categories (DevOps, project management, communication, data operations, custom CLI, and composite workflows) across 12 CLI tools. Tasks are grounded in stateful mock backends that simulate real services (GitHub, Slack, Linear, Notion, Google Workspace, Jira) with deterministic execution, enabling reproducible evaluation without live API dependencies. Each tool is defined via a declarative YAML adapter specification, making the benchmark trivially extensible to new tools.
+The benchmark comprises 50 tasks spanning seven categories (DevOps, project management, communication, data operations, custom CLI, composite workflows, and information retrieval) across 13 CLI tools. Tasks are grounded in stateful mock backends that simulate real services (GitHub, Slack, Linear, Notion, Google Workspace, Jira, OpenCLI) with deterministic execution, enabling reproducible evaluation without live API dependencies. Each tool is defined via a declarative YAML adapter specification, making the benchmark trivially extensible to new tools.
 
 A key contribution is the inclusion of **five fictional CLI tools** (kforge, flowctl, meshctl, datapipe, alertmgr) that no language model has encountered during training. These tools follow realistic CLI conventions but implement novel domain semantics, providing a memorization-proof evaluation of genuine tool-learning capability rather than pattern recall. Evaluation uses state-diffing against expected outcomes, efficiency measurement against optimal command counts, error recovery analysis, and a pass^k consistency metric adapted from tau-bench.
 
@@ -68,17 +68,18 @@ A key contribution is the inclusion of **five fictional CLI tools** (kforge, flo
 - **Multi-turn execution** -- Agents operate in a realistic loop: observe task and tool docs, issue commands, receive stdout/stderr, iterate until completion or timeout.
 - **State-diffing evaluation** -- Scoring compares actual service state against expected state using deep recursive comparison with partial credit (0.0--1.0).
 - **pass^k consistency metric** -- Measures reliability across k independent runs, not just peak performance. An agent must succeed on all k runs to score pass^k = 1.0.
-- **Deterministic mock backends** -- All 7 service simulators (GitHub, Slack, Linear, Notion, Google, Jira, plus a generic fictional backend) are fully stateful and deterministic.
+- **Semi-fictional tool evaluation** -- OpenCLI, a real but low-visibility web data retrieval CLI, provides a memorization-resistant evaluation axis between fully real and fully fictional tools.
+- **Deterministic mock backends** -- All 8 service simulators (GitHub, Slack, Linear, Notion, Google, Jira, OpenCLI, plus a generic fictional backend) are fully stateful and deterministic.
 
 ## Benchmark Statistics
 
 | Dimension | Value |
 |-----------|-------|
-| Total tasks | 40 |
-| Easy / Medium / Hard | 20 / 10 / 10 |
-| Real-world CLI tools | 7 (gh, slack, linear, notion, google, jira, microsoft) |
+| Total tasks | 50 |
+| Easy / Medium / Hard | 23 / 13 / 14 |
+| Real-world CLI tools | 8 (gh, slack, linear, notion, google, jira, microsoft, opencli) |
 | Fictional CLI tools | 5 (kforge, flowctl, meshctl, datapipe, alertmgr) |
-| Task categories | 6 (devops, project_mgmt, communication, data_ops, custom_cli, composite) |
+| Task categories | 7 (devops, project_mgmt, communication, data_ops, custom_cli, composite, info_retrieval) |
 | Commands per tool | >= 5 |
 | Max turns per task | 3--15 |
 
