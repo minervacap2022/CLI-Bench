@@ -15,6 +15,7 @@ from cli_bench.harness.runner import Runner
 from cli_bench.mock_backends.base import BaseMockBackend
 from cli_bench.mock_backends.github import GitHubMockBackend
 from cli_bench.mock_backends.linear import LinearMockBackend
+from cli_bench.mock_backends.opencli import OpenCLIMockBackend
 from cli_bench.mock_backends.slack import SlackMockBackend
 from cli_bench.models.scoring import TaskScore
 from cli_bench.models.task import BenchTask
@@ -24,6 +25,7 @@ _BACKEND_REGISTRY: dict[str, type[BaseMockBackend]] = {
     "github": GitHubMockBackend,
     "slack": SlackMockBackend,
     "linear": LinearMockBackend,
+    "opencli": OpenCLIMockBackend,
 }
 
 # Map tool binary names to their service name for backend routing
@@ -31,6 +33,7 @@ _TOOL_TO_SERVICE: dict[str, str] = {
     "gh": "github",
     "slack": "slack",
     "linear": "linear",
+    "opencli": "opencli",
 }
 
 

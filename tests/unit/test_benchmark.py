@@ -101,3 +101,51 @@ class TestBenchmarkWithDummyAgent:
         assert isinstance(result, TaskResult)
         assert result.task_id == "cli-gh-001"
         assert len(result.scores) == 3
+
+
+class TestBenchmarkWithOpenCLI:
+    @pytest.mark.asyncio
+    async def test_opencli_task_produces_result(self, tmp_path: Path) -> None:
+        """An opencli task creates backend and runs through pipeline."""
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+
+        data = {
+            "id": "test-opencli-001",
+            "title": "Fetch HN top stories",
+            "difficulty": "easy",
+            "category": "info_retrieval",
+            "description": "Fetch the top stories from Hacker News.",
+            "tools_provided": ["opencli"],
+            "initial_state": {
+                "opencli": {
+                    "hackernews": {
+                        "top": [
+                            {"rank": 1, "title": "Test Story", "score": 100, "author": "test", "comments": 10, "url": "https://example.com"},
+                        ]
+                    },
+                    "reddit": {"hot": []},
+                    "github": {"search": [], "trending": []},
+                    "bbc": {"news": []},
+                    "v2ex": {"hot": []},
+                }
+            },
+            "expected_state": {
+                "opencli": {
+                    "hackernews": {
+                        "top": [{"rank": 1, "title": "Test Story"}]
+                    }
+                }
+            },
+            "max_turns": 3,
+            "optimal_commands": 1,
+            "scoring": {"outcome": 0.6, "efficiency": 0.2, "recovery": 0.2},
+        }
+        (tasks_dir / "test.yaml").write_text(yaml.dump(data))
+
+        agent = DummyAgent()
+        runner = BenchmarkRunner(tasks_dir=tasks_dir, agent=agent, k=1)
+        report = await runner.run_all()
+
+        assert len(report.results) == 1
+        assert report.results[0].task_id == "test-opencli-001"
