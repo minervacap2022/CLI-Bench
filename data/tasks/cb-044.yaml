@@ -1,0 +1,45 @@
+id: cb-044
+title: "Compare trending topics across Hacker News and Reddit"
+difficulty: medium
+category: info_retrieval
+description: |
+  Use the opencli tool to gather trending content from both Hacker News
+  and Reddit's r/programming subreddit. Identify topics that appear on
+  both platforms (overlapping themes). Report the overlapping topics
+  and their respective scores on each platform.
+tools_provided:
+  - opencli
+initial_state:
+  opencli:
+    hackernews:
+      top:
+        - {rank: 1, title: "Rust memory safety improvements in 2026", score: 520, author: "rustfan", comments: 180, url: "https://hn.com/1"}
+        - {rank: 2, title: "GPT-5 leaked benchmark results", score: 480, author: "aitracker", comments: 310, url: "https://hn.com/2"}
+        - {rank: 3, title: "PostgreSQL vs MySQL performance in 2026", score: 290, author: "dbexpert", comments: 95, url: "https://hn.com/3"}
+        - {rank: 4, title: "WebAssembly for server-side rendering", score: 210, author: "wasmdev", comments: 42, url: "https://hn.com/4"}
+    reddit:
+      hot:
+        - {rank: 1, title: "GPT-5 benchmarks are out - discussion", subreddit: "r/programming", score: 2100, comments: 890, author: "ai_enthusiast", url: "https://reddit.com/1"}
+        - {rank: 2, title: "Rust 2026 edition preview", subreddit: "r/programming", score: 1500, comments: 430, author: "rust_dev", url: "https://reddit.com/2"}
+        - {rank: 3, title: "New React Server Components update", subreddit: "r/programming", score: 980, comments: 210, author: "react_dev", url: "https://reddit.com/3"}
+        - {rank: 4, title: "PostgreSQL 18 performance deep dive", subreddit: "r/programming", score: 870, comments: 156, author: "pg_admin", url: "https://reddit.com/4"}
+      search: []
+    github: {search: [], trending: []}
+    bbc: {news: []}
+    v2ex: {hot: []}
+expected_state:
+  opencli:
+    command_history:
+      - pattern: "opencli hackernews top"
+      - pattern: "opencli reddit hot"
+    output_contains:
+      - "Rust"
+      - "GPT-5"
+      - "PostgreSQL"
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 5
+optimal_commands: 2
+timeout_seconds: 60

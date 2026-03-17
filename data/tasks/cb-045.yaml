@@ -1,0 +1,45 @@
+id: cb-045
+title: "Fetch tech news from BBC and share summary in Slack"
+difficulty: medium
+category: composite
+description: |
+  Use opencli to fetch the latest technology news from BBC. Then send a
+  message to the #tech-news Slack channel summarizing the top 3 headlines
+  with their links.
+tools_provided:
+  - opencli
+  - slack
+initial_state:
+  opencli:
+    hackernews: {top: []}
+    reddit: {hot: [], search: []}
+    github: {search: [], trending: []}
+    bbc:
+      news:
+        - {rank: 1, title: "AI Regulation Bill Passes Senate", category: "technology", summary: "New legislation sets guidelines for AI development", url: "https://bbc.com/tech/1"}
+        - {rank: 2, title: "Quantum Computing Milestone Achieved", category: "technology", summary: "1000-qubit processor demonstrated", url: "https://bbc.com/tech/2"}
+        - {rank: 3, title: "Cybersecurity Threats Rising in 2026", category: "technology", summary: "Report warns of increased state-sponsored attacks", url: "https://bbc.com/tech/3"}
+        - {rank: 4, title: "Global Markets Rally on Trade Deal", category: "business", summary: "Markets respond to new trade agreement", url: "https://bbc.com/biz/1"}
+    v2ex: {hot: []}
+  slack:
+    channels:
+      - {id: "C100", name: "tech-news", messages: []}
+      - {id: "C101", name: "general", messages: []}
+    users: []
+expected_state:
+  opencli:
+    command_history:
+      - pattern: "opencli bbc news.*--category.*technology"
+  slack:
+    channels:
+      - id: "C100"
+        name: "tech-news"
+        messages:
+          - contains: ["AI Regulation", "Quantum Computing", "Cybersecurity"]
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 5
+optimal_commands: 2
+timeout_seconds: 60

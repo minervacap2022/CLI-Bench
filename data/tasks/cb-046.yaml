@@ -1,0 +1,48 @@
+id: cb-046
+title: "Search GitHub repos and create evaluation issue"
+difficulty: medium
+category: composite
+description: |
+  Use opencli to search GitHub for repositories related to "vector database"
+  written in Rust. Then create an issue in the "acme-corp/infra" repo to
+  evaluate the top result, including the repo name, star count, and URL
+  in the issue body.
+tools_provided:
+  - opencli
+  - gh
+initial_state:
+  opencli:
+    hackernews: {top: []}
+    reddit: {hot: [], search: []}
+    github:
+      search:
+        - {name: "qdrant/qdrant", description: "High-performance vector database", stars: 21000, language: "Rust", url: "https://github.com/qdrant/qdrant"}
+        - {name: "meilisearch/meilisearch", description: "Lightning fast search engine", stars: 48000, language: "Rust", url: "https://github.com/meilisearch/meilisearch"}
+        - {name: "chroma-core/chroma", description: "AI-native embedding database", stars: 16000, language: "Python", url: "https://github.com/chroma-core/chroma"}
+        - {name: "lancedb/lance", description: "Columnar vector database", stars: 4200, language: "Rust", url: "https://github.com/lancedb/lance"}
+      trending: []
+    bbc: {news: []}
+    v2ex: {hot: []}
+  gh:
+    repos:
+      acme-corp/infra:
+        issues: []
+        pulls: []
+        commits: []
+expected_state:
+  opencli:
+    command_history:
+      - pattern: "opencli github search.*--query.*vector.*--language.*Rust"
+  gh:
+    repos:
+      acme-corp/infra:
+        issues:
+          - title_contains: "qdrant"
+            state: open
+scoring:
+  outcome: 0.6
+  efficiency: 0.2
+  recovery: 0.2
+max_turns: 5
+optimal_commands: 2
+timeout_seconds: 60
