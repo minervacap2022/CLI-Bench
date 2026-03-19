@@ -1,0 +1,49 @@
+id: cb-059
+title: "(gh) [exploration] List open issues with description only"
+difficulty: easy
+category: project_mgmt_exploration
+description: |
+  List all open issues in the repository "acme-corp/web-platform".
+  You have a brief description of the tool but not full documentation —
+  use --help to discover the exact commands and flags.
+tools_provided:
+  - gh
+doc_visibility: description_only
+optimal_help_calls: 2
+initial_state:
+  gh:
+    repos:
+      acme-corp/web-platform:
+        issues:
+          - number: 42
+            title: "Fix login redirect loop"
+            state: open
+            assignee: alice
+            labels: ["bug", "auth"]
+          - number: 43
+            title: "Add dark mode support"
+            state: open
+            assignee: bob
+            labels: ["enhancement", "ui"]
+          - number: 44
+            title: "Update README with API docs"
+            state: closed
+            assignee: carol
+            labels: ["docs"]
+        pulls: []
+        commits: []
+expected_state:
+  gh:
+    command_history:
+      - pattern: "gh issue list.*--repo acme-corp/web-platform.*--state open"
+    output_contains:
+      - "42"
+      - "43"
+scoring:
+  outcome: 0.5
+  efficiency: 0.15
+  recovery: 0.15
+  exploration: 0.2
+max_turns: 8
+optimal_commands: 1
+timeout_seconds: 60

@@ -1,0 +1,43 @@
+id: cb-056
+title: "(kforge) [exploration] Trigger pipeline without docs"
+difficulty: hard
+category: custom_cli_exploration
+description: |
+  Using the kforge tool:
+  1. Inspect artifact "art-a1b2c3" to see its details.
+  2. Trigger a deployment pipeline for that artifact to "staging" with
+     parameters: {"replicas": 3}.
+  You are not provided with documentation — discover the tool's commands yourself.
+tools_provided:
+  - kforge
+doc_visibility: name_only
+optimal_help_calls: 3
+initial_state:
+  kforge:
+    artifacts:
+      - id: art-a1b2c3
+        namespace: team-backend
+        type: docker
+        name: api-server
+        tag: v2.0.0
+        size_mb: 245
+        build_info:
+          commit: abc123
+          branch: main
+    pipelines: []
+    registries: []
+expected_state:
+  kforge:
+    command_history:
+      - pattern: "kforge artifact inspect.*--id art-a1b2c3"
+      - pattern: "kforge pipeline trigger.*--artifact art-a1b2c3.*--target staging"
+    output_contains:
+      - "art-a1b2c3"
+scoring:
+  outcome: 0.5
+  efficiency: 0.15
+  recovery: 0.15
+  exploration: 0.2
+max_turns: 12
+optimal_commands: 2
+timeout_seconds: 90

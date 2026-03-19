@@ -109,3 +109,126 @@ class ToolAdapter(BaseModel):
             lines.append(cmd.to_help_text())
 
         return "\n".join(lines)
+
+    def _get_subcommand_groups(self) -> dict[str, list[ToolCommand]]:
+        """Group commands by their subcommand prefix.
+
+        Command names like ``"issue list"`` split into subcommand ``"issue"``
+        and action ``"list"``.  Single-word commands are grouped under their
+        own name.
+
+        Returns a dict mapping subcommand name → list of ToolCommands.
+        """
+        groups: dict[str, list[ToolCommand]] = {}
+        for cmd in self.commands:
+            parts = cmd.name.split(None, 1)
+            sub = parts[0]
+            groups.setdefault(sub, []).append(cmd)
+        return groups
+
+    def to_root_help(self) -> str:
+        """Generate root-level ``<binary> --help`` text.
+
+        Lists subcommands grouped from command names, following real CLI
+        conventions (USAGE / AVAILABLE COMMANDS / FLAGS).
+        """
+        groups = self._get_subcommand_groups()
+        lines: list[str] = [
+            f"{self.binary} - {self.description}",
+            "",
+            "USAGE:",
+            f"  {self.binary} <command> [flags]",
+            "",
+            "AVAILABLE COMMANDS:",
+        ]
+        for sub, cmds in groups.items():
+            # Build a short summary from the first command's description
+            if len(cmds) == 1 and " " not in cmds[0].name:
+                summary = cmds[0].description
+            else:
+                # Derive a generic summary from the subcommand name
+                summary = f"Manage {sub}"
+            lines.append(f"  {sub:<20s}{summary}")
+        lines.extend([
+            "",
+            "FLAGS:",
+            "  -h, --help          Show help for a command",
+            "",
+            f'Use "{self.binary} <command> --help" for more information.',
+        ])
+        return "\n".join(lines)
+
+    def to_subcommand_help(self, subcommand: str) -> str:
+        """Generate ``<binary> <subcommand> --help`` text.
+
+        Lists actions available under *subcommand*.  For single-word commands
+        that match exactly, falls back to full action help.
+        """
+        groups = self._get_subcommand_groups()
+        cmds = groups.get(subcommand)
+        if cmds is None:
+            return f"Error: unknown command \"{subcommand}\" for \"{self.binary}\""
+
+        # If there's only one command and it's a single-word name, show full help
+        if len(cmds) == 1 and " " not in cmds[0].name:
+            return self.to_action_help(cmds[0].name)
+
+        lines: list[str] = [
+            f"Manage {subcommand}",
+            "",
+            "USAGE:",
+            f"  {self.binary} {subcommand} <command> [flags]",
+            "",
+            "AVAILABLE COMMANDS:",
+        ]
+        for cmd in cmds:
+            parts = cmd.name.split(None, 1)
+            action = parts[1] if len(parts) > 1 else parts[0]
+            lines.append(f"  {action:<20s}{cmd.description}")
+        lines.extend([
+            "",
+            "FLAGS:",
+            "  -h, --help          Show help for a command",
+            "",
+            f'Use "{self.binary} {subcommand} <command> --help" for more information.',
+        ])
+        return "\n".join(lines)
+
+    def to_action_help(self, name: str) -> str:
+        """Generate ``<binary> <sub> <action> --help`` text.
+
+        Shows full FLAGS + EXAMPLES for one command.
+        """
+        cmd = self.get_command(name)
+        if cmd is None:
+            return f"Error: unknown command \"{name}\" for \"{self.binary}\""
+
+        lines: list[str] = [
+            cmd.description,
+            "",
+            "USAGE:",
+            f"  {self.binary} {cmd.name} [flags]",
+        ]
+
+        if cmd.args:
+            lines.extend(["", "FLAGS:"])
+            for arg in cmd.args:
+                type_str = f"<{arg.type}>"
+                req = " (required)" if arg.required else ""
+                line = f"  --{arg.name} {type_str}{req}"
+                line += f"\t{arg.description}"
+                if arg.values:
+                    line += f" (values: {', '.join(arg.values)})"
+                if arg.default is not None:
+                    line += f" (default: {arg.default})"
+                lines.append(line)
+
+        lines.extend([
+            "",
+            "  -h, --help\tShow help for this command",
+        ])
+
+        if cmd.example:
+            lines.extend(["", "EXAMPLES:", f"  {cmd.example}"])
+
+        return "\n".join(lines)

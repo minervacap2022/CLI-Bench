@@ -1,0 +1,34 @@
+id: cb-057
+title: "(meshctl) [exploration] Configure traffic split without docs"
+difficulty: hard
+category: custom_cli_exploration
+description: |
+  Using the meshctl tool, configure a canary deployment for "user-service":
+  Route 90% of traffic to v1 and 10% to v2.
+  You are not provided with documentation — discover the tool's commands yourself.
+tools_provided:
+  - meshctl
+doc_visibility: name_only
+optimal_help_calls: 2
+initial_state:
+  meshctl:
+    services:
+      - id: svc-001
+        name: user-service
+        namespace: production
+        status: healthy
+        port: 8080
+    policies: []
+    traffic_splits: []
+expected_state:
+  meshctl:
+    command_history:
+      - pattern: "meshctl traffic split.*--service user-service"
+scoring:
+  outcome: 0.5
+  efficiency: 0.15
+  recovery: 0.15
+  exploration: 0.2
+max_turns: 10
+optimal_commands: 1
+timeout_seconds: 60

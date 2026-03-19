@@ -1,0 +1,33 @@
+id: cb-054
+title: "(datapipe) [exploration] Connect a data source without docs"
+difficulty: medium
+category: custom_cli_exploration
+description: |
+  Using the datapipe tool, register a new PostgreSQL data source named "analytics-db"
+  with the connection config: host "db.analytics.internal", port 5432, database "analytics".
+  You are not provided with documentation — discover the tool's commands yourself.
+tools_provided:
+  - datapipe
+doc_visibility: name_only
+optimal_help_calls: 3
+initial_state:
+  datapipe:
+    sources: []
+    transforms: []
+    sinks: []
+    pipelines: []
+expected_state:
+  datapipe:
+    command_history:
+      - pattern: "datapipe source connect.*--name analytics-db.*--type postgres"
+    sources:
+      - name: analytics-db
+        type: postgres
+scoring:
+  outcome: 0.5
+  efficiency: 0.15
+  recovery: 0.15
+  exploration: 0.2
+max_turns: 10
+optimal_commands: 1
+timeout_seconds: 60

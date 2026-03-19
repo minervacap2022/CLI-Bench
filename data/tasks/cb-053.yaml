@@ -1,0 +1,51 @@
+id: cb-053
+title: "(meshctl) [exploration] List healthy services without docs"
+difficulty: medium
+category: custom_cli_exploration
+description: |
+  List all services in the "production" namespace that have a healthy status
+  using the meshctl tool.
+  You are not provided with documentation — discover the tool's commands yourself.
+tools_provided:
+  - meshctl
+doc_visibility: name_only
+optimal_help_calls: 2
+initial_state:
+  meshctl:
+    services:
+      - id: svc-001
+        name: user-service
+        namespace: production
+        status: healthy
+        port: 8080
+      - id: svc-002
+        name: payment-svc
+        namespace: production
+        status: degraded
+        port: 8081
+      - id: svc-003
+        name: api-gateway
+        namespace: production
+        status: healthy
+        port: 443
+      - id: svc-004
+        name: staging-api
+        namespace: staging
+        status: healthy
+        port: 8080
+    policies: []
+expected_state:
+  meshctl:
+    command_history:
+      - pattern: "meshctl service list.*--namespace production.*--status healthy"
+    output_contains:
+      - "user-service"
+      - "api-gateway"
+scoring:
+  outcome: 0.5
+  efficiency: 0.15
+  recovery: 0.15
+  exploration: 0.2
+max_turns: 10
+optimal_commands: 1
+timeout_seconds: 60

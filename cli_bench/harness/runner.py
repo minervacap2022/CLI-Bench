@@ -4,14 +4,19 @@ Drives an agent through a task by building observations,
 routing commands to mock backends, and collecting results.
 """
 
+import logging
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from cli_bench.agents.base import BenchAgent
 from cli_bench.mock_backends.base import BaseMockBackend
 from cli_bench.models.observation import Observation
 from cli_bench.models.task import BenchTask
+from cli_bench.models.tool_adapter import ToolAdapter
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -38,9 +43,29 @@ class Runner:
         self,
         agent: BenchAgent,
         backends: dict[str, BaseMockBackend],
+        tool_adapters_dir: Path | None = None,
     ) -> None:
         self._agent = agent
         self._backends = backends
+        self._tool_adapters = self._load_adapters(tool_adapters_dir) if tool_adapters_dir else {}
+
+    @staticmethod
+    def _load_adapters(adapters_dir: Path) -> dict[str, ToolAdapter]:
+        """Load all tool adapter YAML files from the given directory.
+
+        Returns a dict keyed by the adapter's binary name (e.g. ``gh``, ``slack``).
+        """
+        adapters: dict[str, ToolAdapter] = {}
+        if not adapters_dir.is_dir():
+            logger.warning("Tool adapters directory does not exist: %s", adapters_dir)
+            return adapters
+        for yaml_path in sorted(adapters_dir.glob("*.yaml")):
+            try:
+                adapter = ToolAdapter.from_yaml(yaml_path)
+                adapters[adapter.binary] = adapter
+            except Exception:
+                logger.warning("Failed to load tool adapter: %s", yaml_path, exc_info=True)
+        return adapters
 
     async def run_task(
         self,
@@ -53,9 +78,29 @@ class Runner:
         stdout = ""
         stderr = ""
 
-        tool_prompts = [{"name": tool} for tool in task.tools_provided]
+        # Inject tool adapters into backends so --help interception works
+        for tool_name, backend in self._backends.items():
+            adapter = self._tool_adapters.get(tool_name)
+            if adapter is not None:
+                backend.set_tool_adapter(adapter)
+
+        tool_prompts = self._build_tool_prompts(task.tools_provided, task.doc_visibility)
+
+        timeout_ms = task.timeout_seconds * 1000
 
         for turn in range(task.max_turns):
+            # Timeout enforcement: check elapsed time before each turn
+            if (_now_ms() - start_ms) >= timeout_ms:
+                elapsed = _now_ms() - start_ms
+                return RunResult(
+                    task_id=task.id,
+                    turns=turn,
+                    finished=False,
+                    final_state=self._snapshot_all(),
+                    action_log=action_log,
+                    elapsed_ms=elapsed,
+                )
+
             observation = Observation(
                 task=task.description,
                 tools=tool_prompts,
@@ -105,6 +150,65 @@ class Runner:
             action_log=action_log,
             elapsed_ms=elapsed,
         )
+
+    def _build_tool_prompts(
+        self,
+        tools: list[str],
+        doc_visibility: str = "full",
+    ) -> list[dict[str, Any]]:
+        """Build tool prompt dicts, filtered by *doc_visibility*.
+
+        - ``"full"``: current behaviour — full docs, commands, examples.
+        - ``"description_only"``: name + description + discovery hint.
+        - ``"name_only"``: just binary name + discovery hint.
+        """
+        prompts: list[dict[str, Any]] = []
+        for tool in tools:
+            adapter = self._tool_adapters.get(tool)
+            if adapter is None:
+                prompts.append({"name": tool})
+                continue
+
+            if doc_visibility == "name_only":
+                prompts.append({
+                    "name": adapter.binary,
+                    "hint": f"Use '{adapter.binary} --help' to discover commands.",
+                })
+            elif doc_visibility == "description_only":
+                prompts.append({
+                    "name": adapter.binary,
+                    "description": adapter.description,
+                    "hint": f"Use '{adapter.binary} --help' to discover commands.",
+                })
+            else:
+                # full — unchanged
+                prompts.append({
+                    "name": adapter.binary,
+                    "description": adapter.description,
+                    "commands": [
+                        {
+                            "name": cmd.name,
+                            "description": cmd.description,
+                            "args": [
+                                {
+                                    "name": arg.name,
+                                    "type": arg.type,
+                                    "required": arg.required,
+                                    "description": arg.description,
+                                    **({"default": arg.default} if arg.default is not None else {}),
+                                    **({"values": arg.values} if arg.values else {}),
+                                }
+                                for arg in cmd.args
+                            ],
+                            "output_format": cmd.output_format,
+                            "side_effects": cmd.side_effects,
+                            **({"example": cmd.example} if cmd.example else {}),
+                        }
+                        for cmd in adapter.commands
+                    ],
+                    "full_documentation": adapter.to_prompt(),
+                })
+        return prompts
 
     def _snapshot_all(self) -> dict[str, Any]:
         """Snapshot state from all backends."""

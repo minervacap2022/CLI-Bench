@@ -22,6 +22,7 @@ class ScoringConfig(BaseModel):
     outcome: float = 0.6
     efficiency: float = 0.2
     recovery: float = 0.2
+    exploration: float = 0.0
     memory_utilization: float = 0.0
     preference_adherence: float = 0.0
     tone_appropriateness: float = 0.0
@@ -40,7 +41,9 @@ class BenchTask(BaseModel):
     expected_state: dict
     scoring: ScoringConfig = ScoringConfig()
     max_turns: int
+    doc_visibility: Literal["full", "name_only", "description_only"] = "full"
     optimal_commands: int = 1
+    optimal_help_calls: int | None = None
     timeout_seconds: int = 300
     persona: str | None = None
     memory_required: list[str] | None = None

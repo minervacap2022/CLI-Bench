@@ -1,0 +1,44 @@
+id: cb-051
+title: "(kforge) [exploration] List artifacts without docs"
+difficulty: medium
+category: custom_cli_exploration
+description: |
+  List all Docker artifacts in the "team-backend" namespace using the kforge tool.
+  You are not provided with documentation — discover the tool's commands yourself.
+tools_provided:
+  - kforge
+doc_visibility: name_only
+optimal_help_calls: 2
+initial_state:
+  kforge:
+    artifacts:
+      - id: art-001
+        namespace: team-backend
+        type: docker
+        name: api-server
+        tag: v1.2.0
+      - id: art-002
+        namespace: team-backend
+        type: npm
+        name: shared-utils
+        tag: v0.9.1
+      - id: art-003
+        namespace: ml-models
+        type: docker
+        name: inference-svc
+        tag: v2.0.0
+expected_state:
+  kforge:
+    command_history:
+      - pattern: "kforge artifact list.*--namespace team-backend.*--type docker"
+    output_contains:
+      - "art-001"
+      - "api-server"
+scoring:
+  outcome: 0.5
+  efficiency: 0.15
+  recovery: 0.15
+  exploration: 0.2
+max_turns: 10
+optimal_commands: 1
+timeout_seconds: 60

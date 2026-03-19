@@ -13,20 +13,39 @@ from cli_bench.agents.base import BenchAgent
 from cli_bench.harness.evaluator import Evaluator
 from cli_bench.harness.runner import Runner
 from cli_bench.mock_backends.base import BaseMockBackend
+from cli_bench.mock_backends.fictional import FictionalMockBackend
 from cli_bench.mock_backends.github import GitHubMockBackend
+from cli_bench.mock_backends.google import GoogleMockBackend
+from cli_bench.mock_backends.jira import JiraMockBackend
 from cli_bench.mock_backends.linear import LinearMockBackend
+from cli_bench.mock_backends.notion import NotionMockBackend
 from cli_bench.mock_backends.opencli import OpenCLIMockBackend
 from cli_bench.mock_backends.slack import SlackMockBackend
 from cli_bench.models.scoring import TaskScore
 from cli_bench.models.task import BenchTask
+from cli_bench.scoring.reliability import ReliabilityMetrics, analyze_reliability
 
-# Map service names to backend classes
+# Map service names to backend classes.
+# Also includes binary names (e.g. ``gh``) so that tasks whose
+# ``initial_state`` keys use binary names resolve correctly.
 _BACKEND_REGISTRY: dict[str, type[BaseMockBackend]] = {
     "github": GitHubMockBackend,
+    "gh": GitHubMockBackend,
     "slack": SlackMockBackend,
     "linear": LinearMockBackend,
     "opencli": OpenCLIMockBackend,
+    "jira": JiraMockBackend,
+    "notion": NotionMockBackend,
+    "google": GoogleMockBackend,
+    "kforge": FictionalMockBackend,
+    "flowctl": FictionalMockBackend,
+    "meshctl": FictionalMockBackend,
+    "datapipe": FictionalMockBackend,
+    "alertmgr": FictionalMockBackend,
 }
+
+# Fictional tools share FictionalMockBackend and require tool_name on init
+_FICTIONAL_TOOLS: set[str] = {"kforge", "flowctl", "meshctl", "datapipe", "alertmgr"}
 
 # Map tool binary names to their service name for backend routing
 _TOOL_TO_SERVICE: dict[str, str] = {
@@ -34,6 +53,14 @@ _TOOL_TO_SERVICE: dict[str, str] = {
     "slack": "slack",
     "linear": "linear",
     "opencli": "opencli",
+    "jira": "jira",
+    "notion": "notion",
+    "google": "google",
+    "kforge": "kforge",
+    "flowctl": "flowctl",
+    "meshctl": "meshctl",
+    "datapipe": "datapipe",
+    "alertmgr": "alertmgr",
 }
 
 
@@ -58,6 +85,7 @@ class BenchmarkReport:
     by_category: dict[str, float]
     total_cost_usd: float
     total_time_ms: int
+    reliability: ReliabilityMetrics | None = None
 
 
 class BenchmarkRunner:
@@ -68,11 +96,17 @@ class BenchmarkRunner:
         tasks_dir: Path,
         agent: BenchAgent,
         k: int = 5,
+        tool_adapters_dir: Path | None = None,
     ) -> None:
         self._tasks = self._load_tasks(tasks_dir)
         self._agent = agent
         self._k = k
         self._evaluator = Evaluator()
+        self._tool_adapters_dir = (
+            tool_adapters_dir
+            if tool_adapters_dir is not None
+            else Path("cli_bench/tool_adapters")
+        )
 
     async def run_all(self) -> BenchmarkReport:
         """Run all tasks k times each, aggregate into BenchmarkReport."""
@@ -101,7 +135,11 @@ class BenchmarkRunner:
             backends = self._create_backends(task)
             tool_backends = self._map_tools_to_backends(task, backends)
 
-            runner = Runner(agent=self._agent, backends=tool_backends)
+            runner = Runner(
+                agent=self._agent,
+                backends=tool_backends,
+                tool_adapters_dir=self._tool_adapters_dir,
+            )
             run_result = await runner.run_task(task)
             score = self._evaluator.evaluate(task, run_result, backends)
             scores.append(score)
@@ -122,7 +160,11 @@ class BenchmarkRunner:
         for service_name, initial_state in task.initial_state.items():
             backend_cls = _BACKEND_REGISTRY.get(service_name)
             if backend_cls is not None:
-                backends[service_name] = backend_cls(copy.deepcopy(initial_state))
+                state = copy.deepcopy(initial_state)
+                if service_name in _FICTIONAL_TOOLS:
+                    backends[service_name] = backend_cls(state, tool_name=service_name)
+                else:
+                    backends[service_name] = backend_cls(state)
         return backends
 
     def _map_tools_to_backends(
@@ -160,6 +202,7 @@ class BenchmarkRunner:
                 by_category={},
                 total_cost_usd=0.0,
                 total_time_ms=total_time_ms,
+                reliability=None,
             )
 
         overall_score = sum(r.mean_score for r in results) / len(results)
@@ -175,6 +218,13 @@ class BenchmarkRunner:
             by_difficulty.setdefault(task.difficulty, []).append(result.mean_score)
             by_category.setdefault(task.category, []).append(result.mean_score)
 
+        # Compute reliability metrics from per-task run scores
+        # Shape: [n_tasks, k_runs] — each inner list is scores for one task
+        run_outcomes = [
+            [s.total for s in result.scores] for result in results
+        ]
+        reliability = analyze_reliability(run_outcomes)
+
         return BenchmarkReport(
             results=results,
             overall_score=overall_score,
@@ -183,6 +233,7 @@ class BenchmarkRunner:
             by_category={k: sum(v) / len(v) for k, v in by_category.items()},
             total_cost_usd=0.0,
             total_time_ms=total_time_ms,
+            reliability=reliability,
         )
 
     @staticmethod

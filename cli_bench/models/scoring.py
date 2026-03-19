@@ -13,6 +13,7 @@ class ScoringWeights:
     outcome: float = 0.6
     efficiency: float = 0.2
     recovery: float = 0.2
+    exploration: float = 0.0
     memory_utilization: float = 0.0
     preference_adherence: float = 0.0
     tone_appropriateness: float = 0.0
@@ -26,6 +27,7 @@ class TaskScore:
     efficiency: float
     recovery: float
     total: float
+    exploration: float = 0.0
     memory_utilization: float = 0.0
     preference_adherence: float = 0.0
     tone_appropriateness: float = 0.0
@@ -37,6 +39,7 @@ class TaskScore:
         efficiency: float,
         recovery: float,
         weights: ScoringWeights,
+        exploration: float = 0.0,
         memory_utilization: float = 0.0,
         preference_adherence: float = 0.0,
         tone_appropriateness: float = 0.0,
@@ -46,6 +49,7 @@ class TaskScore:
             outcome * weights.outcome
             + efficiency * weights.efficiency
             + recovery * weights.recovery
+            + exploration * weights.exploration
             + memory_utilization * weights.memory_utilization
             + preference_adherence * weights.preference_adherence
             + tone_appropriateness * weights.tone_appropriateness
@@ -55,6 +59,7 @@ class TaskScore:
             efficiency=efficiency,
             recovery=recovery,
             total=total,
+            exploration=exploration,
             memory_utilization=memory_utilization,
             preference_adherence=preference_adherence,
             tone_appropriateness=tone_appropriateness,
